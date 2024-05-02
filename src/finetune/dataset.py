@@ -15,9 +15,16 @@ from torch import nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 8} 
+models_dict = {
+    "codebert":"microsoft/codebert-base",
+    "codet5-base":"Salesforce/codet5-base",
+    "codet5p-770m":"Salesforce/codet5p-770m",
+    "codet5p-110m-embedding":"Salesforce/codet5p-110m-embedding",
+    "codesage":"codesage/codesage-small"
+}
 
 class CallGraphDataset(Dataset):
-    def __init__(self, config, mode):
+    def __init__(self, config, mode, model_name):
         self.mode = mode
         self.train_mode = mode
         self.config = config
@@ -25,7 +32,8 @@ class CallGraphDataset(Dataset):
         self.processed_path = self.config["PROCESSED_DATA"]
         self.save_dir = self.config["CACHE_DIR"]
         # self.size_mode = size_mode
-        self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
+        self.save_path = os.path.join(self.save_dir, f"{self.model_name}/", f"{self.mode}.pkl")
+        self.model_name = model_name
         self.cg_file = self.config["FULL_FILE"]
 
         self.max_length = 512
@@ -40,11 +48,12 @@ class CallGraphDataset(Dataset):
         print(self.has_cache())
         if self.has_cache():
             self.load()
-        else:
-            self.tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
+        elif self.model_name in models_dict:
+            self.tokenizer = AutoTokenizer.from_pretrained(models_dict[self.model_name])
             self.process()
             self.save()
-
+        else:
+            return NotImplemented
     
     def __len__(self):
         return len(self.data)
@@ -122,6 +131,6 @@ class CallGraphDataset(Dataset):
         return False
 
 if __name__ == '__main__':
-    config = read_config_file("config/wala.config")
-    data = CallGraphDataset(config, "test")
-    data = CallGraphDataset(config, "train")
+    config = read_config_file("config/kaggle_wala.config")
+    data = CallGraphDataset(config, "test", "codet5p-110m-embedding")
+    data = CallGraphDataset(config, "train", "codet5p-110m-embedding")

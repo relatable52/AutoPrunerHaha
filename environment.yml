@@ -126,7 +126,7 @@ dependencies:
   - pexpect=4.8.0=pyh9f0ad1d_2
   - pickleshare=0.7.5=py_1003
   - pillow=8.4.0=py39h5aabda8_0
-  - pip=21.2.4=py39h06a4308_0
+  - pip=24.0
   - pixman=0.40.0=h36c2ea0_0
   - prompt-toolkit=3.0.27=pyha770c72_0
   - pthread-stubs=0.4=h36c2ea0_1001
