@@ -49,6 +49,6 @@ class CodeSageBase(nn.Module):
         self.codesage_model = AutoModel.from_pretrained("codesage/codesage-small")
         self.out = nn.Linear(1024, 2)
     def forward(self, ids, mask):
-        _, emb = self.codesage_model(input_ids = ids, attention_mask=mask, return_dict=False)
+        emb = self.codesage_model(input_ids = ids, attention_mask=mask, return_dict=False)[1]
         out = self.out(emb)
         return out, emb
