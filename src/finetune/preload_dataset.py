@@ -16,5 +16,8 @@ def main():
     data = CallGraphDataset(config, "test", model_name)
     data = CallGraphDataset(config, "train", model_name)
 
+if __name__ == "__main__":
+    main()
+
 
 
