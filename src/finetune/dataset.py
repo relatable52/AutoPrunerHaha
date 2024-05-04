@@ -30,10 +30,10 @@ class CallGraphDataset(Dataset):
         self.config = config
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
-        self.save_dir = self.config["CACHE_DIR"]
         # self.size_mode = size_mode
         self.model_name = model_name
-        self.save_path = os.path.join(self.save_dir, f"{self.model_name}/", f"{self.mode}.pkl")
+        self.save_dir = os.path.join(self.config["CACHE_DIR"], f"{self.model_name}/")
+        self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
 
         self.max_length = 512
