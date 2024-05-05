@@ -80,8 +80,7 @@ def do_test(dataloader, model):
     logger.log("[EVAL] Iter {}, Precision {}, Recall {}, F1 {}".format(batch, precision, recall, f1))
 
 def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir):
-    cfx_matrix = np.array([[0, 0],
-                           [0, 0]])
+    cfx_matrix = None
     mean_loss = AverageMeter()
     for epoch in range(epochs):
         logger.log("Start training at epoch {} ...".format(epoch))
