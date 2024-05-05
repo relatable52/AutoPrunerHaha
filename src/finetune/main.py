@@ -1,7 +1,5 @@
 from tqdm import tqdm
 import numpy as np
-from src.finetune.dataset import CallGraphDataset
-from src.finetune.kaggle_dataset import KaggleCallGraphDataset
 from torch.utils.data import DataLoader
 from src.finetune.model import BERT, CodeT5Enc, CodeT5pEmb, CodeSageBase, CodeT5pEnc
 from torch import nn
@@ -134,9 +132,11 @@ def main():
     learned_model_dir = config["LEARNED_MODEL_DIR"]
 
     if(args.config_path == "config/kaggle_finetune_wala.config"):
+        from src.finetune.kaggle_dataset import KaggleCallGraphDataset
         train_dataset= KaggleCallGraphDataset(config, "train", model_name)
         test_dataset= KaggleCallGraphDataset(config, "test", model_name)
     else:
+        from src.finetune.dataset import CallGraphDataset
         train_dataset= CallGraphDataset(config, "train", model_name)
         test_dataset= CallGraphDataset(config, "test", model_name)
 
