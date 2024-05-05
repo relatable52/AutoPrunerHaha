@@ -85,9 +85,9 @@ def main():
     mask = batch['mask']
     label = batch['label']
     print(batch)
-    print(ids)
-    print(mask)
-    print(label)
+    print(ids.shape)
+    print(mask.shape)
+    print(label.shape)
     output = model(ids=ids, mask=mask)
     print(output)
 
