@@ -39,7 +39,7 @@ class CodeT5pEmb(nn.Module):
         self.codet5p_emb_model = AutoModel.from_pretrained("Salesforce/codet5p-110m-embedding", trust_remote_code=True)
         self.out = nn.Linear(256, 2)
     def forward(self, ids, mask):
-        emb = self.codet5p_emb_model(input_ids=ids, attention_mask=mask)[0]
+        emb = self.codet5p_emb_model(input_ids=ids, attention_mask=mask)
         out = self.out(emb)
         return out, emb
 
