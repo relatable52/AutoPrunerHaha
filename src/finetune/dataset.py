@@ -9,7 +9,6 @@ from tqdm import tqdm
 from src.utils.utils import read_config_file, load_code, get_input_and_mask
 from src.utils.converter import convert
 from torch.utils.data import DataLoader
-from src.finetune.model import BERT
 import numpy as np
 from torch import nn
 
