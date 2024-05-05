@@ -56,7 +56,7 @@ def main():
     model_name = args.model_name
     learned_model_dir = config["LEARNED_MODEL_DIR"]
 
-    if args.config_path == "config/kaggle_finetune_wala.config":
+    if (args.config_path == "config/kaggle_finetune_wala.config"):
         from src.finetune.kaggle_dataset import KaggleCallGraphDataset
         train_dataset= KaggleCallGraphDataset(config, "train", model_name)
         test_dataset= KaggleCallGraphDataset(config, "test", model_name)
