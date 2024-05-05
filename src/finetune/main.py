@@ -1,6 +1,7 @@
 from tqdm import tqdm
 import numpy as np
 from src.finetune.dataset import CallGraphDataset
+from src.finetune.kaggle_dataset import KaggleCallGraphDataset
 from torch.utils.data import DataLoader
 from src.finetune.model import BERT, CodeT5Enc, CodeT5pEmb, CodeSageBase, CodeT5pEnc
 from torch import nn
@@ -132,9 +133,12 @@ def main():
     model_name = args.model_name
     learned_model_dir = config["LEARNED_MODEL_DIR"]
 
-
-    train_dataset= CallGraphDataset(config, "train", model_name)
-    test_dataset= CallGraphDataset(config, "test", model_name)
+    if(args.config_path == "config/kaggle_finetune_wala.config"):
+        train_dataset= KaggleCallGraphDataset(config, "train", model_name)
+        test_dataset= KaggleCallGraphDataset(config, "test", model_name)
+    else:
+        train_dataset= CallGraphDataset(config, "train", model_name)
+        test_dataset= CallGraphDataset(config, "test", model_name)
 
     print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
 
