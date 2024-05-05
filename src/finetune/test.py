@@ -1,6 +1,5 @@
 from tqdm import tqdm
 import numpy as np
-from src.finetune.dataset import CallGraphDataset
 from torch.utils.data import DataLoader
 from src.finetune.model import BERT, CodeT5Enc, CodeT5pEmb, CodeSageBase, CodeT5pEnc
 from torch import nn
@@ -57,9 +56,14 @@ def main():
     model_name = args.model_name
     learned_model_dir = config["LEARNED_MODEL_DIR"]
 
-
-    train_dataset= CallGraphDataset(config, "train", model_name)
-    test_dataset= CallGraphDataset(config, "test", model_name)
+    if args.config_path == "config/kaggle_finetune_wala.config":
+        from src.finetune.kaggle_dataset import KaggleCallGraphDataset
+        train_dataset= KaggleCallGraphDataset(config, "train", model_name)
+        test_dataset= KaggleCallGraphDataset(config, "test", model_name)
+    else:
+        from src.finetune.dataset import CallGraphDataset
+        train_dataset= CallGraphDataset(config, "train", model_name)
+        test_dataset= CallGraphDataset(config, "test", model_name)
 
     print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
 
@@ -75,3 +79,17 @@ def main():
 
     loss_fn = nn.CrossEntropyLoss()
     optimizer= optim.Adam(model.parameters(),lr= 0.00001)
+
+    batch = next(iter(train_loader))
+    ids = batch['ids']
+    mask = batch['mask']
+    label = batch['label']
+    print(batch)
+    print(ids)
+    print(mask)
+    print(label)
+    output = model(ids=ids, mask=mask)
+    print(output)
+
+if __name__ == "__main__":
+    main()
