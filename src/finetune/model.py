@@ -28,7 +28,7 @@ class CodeT5pEnc(nn.Module):
         self.codet5p_model = T5EncoderModel.from_pretrained("Salesforce/codet5p-770m")
         self.out = nn.Linear(1024, 2)
     def forward(self, ids, mask):
-        emb = self.codet5_model(input_ids=ids, attention_mask=mask, return_dict=False)[0]
+        emb = self.codet5p_model(input_ids=ids, attention_mask=mask, return_dict=False)[0]
         emb = emb[:, -1]
         out = self.out(emb)
         return out, emb
