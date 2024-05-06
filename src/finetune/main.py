@@ -198,7 +198,7 @@ def main():
     if mode == "train":
         do_train(1, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "train_kaggle":
-        do_train_kaggle(1, train_loader1, model, loss_fn, optimizer, learned_model_dir)
+        do_train_kaggle(1, train_loader1, model, loss_fn, optimizer, learned_model_dir, 1)
     elif mode == "test":
         model, optimizer = load_checkpoint(model, optimizer, args.model_path)
         do_test(test_loader, model)
