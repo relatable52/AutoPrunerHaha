@@ -15,10 +15,6 @@ warnings.filterwarnings("ignore")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-SEED = 42
-torch.manual_seed = SEED
-torch.cuda.manual_seed = SEED
-
 TRAIN_PARAMS = {'batch_size': 10, 'shuffle': True, 'num_workers': 2}
 TEST_PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 2}
 
