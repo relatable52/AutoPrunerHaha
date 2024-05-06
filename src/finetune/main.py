@@ -1,6 +1,6 @@
 from tqdm import tqdm
 import numpy as np
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from src.finetune.model import BERT, CodeT5Enc, CodeT5pEmb, CodeSageBase, CodeT5pEnc
 from torch import nn
 from torch.nn import functional as F
@@ -14,6 +14,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+SEED = 42
+torch.manual_seed = SEED
+torch.cuda.manual_seed = SEED
 
 TRAIN_PARAMS = {'batch_size': 10, 'shuffle': True, 'num_workers': 2}
 TEST_PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 2}
@@ -88,14 +92,44 @@ def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer, learn
         model, cfx_matrix = train(train_loader, model, mean_loss, loss_fn, optimizer, cfx_matrix)
         
         logger.log("Saving model ...")
-        torch.save(model.state_dict(), os.path.join(learned_model_dir, "model_epoch{}.pth".format(epoch)))
-
+        state = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
+        torch.save(state, os.path.join(learned_model_dir, "model_epoch{}.pth".format(epoch)))
+        
         logger.log("Evaluating ...")
         do_test(test_loader, model)
     
-    torch.save(model.state_dict(), os.path.join(learned_model_dir, "model.pth"))
+    state = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
+    torch.save(state, os.path.join(learned_model_dir, "final_model.pth"))
     logger.log("Done !!!")
 
+def do_train_kaggle(epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir, data_subset):
+    cfx_matrix = np.array([[0, 0],
+                           [0, 0]])
+    mean_loss = AverageMeter()
+    for epoch in range(epochs):
+        logger.log("Start training at epoch {} ...".format(epoch))
+        model, cfx_matrix = train(train_loader, model, mean_loss, loss_fn, optimizer, cfx_matrix)
+        
+        logger.log("Saving model ...")
+        state = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'subset': data_subset}
+        torch.save(state, os.path.join(learned_model_dir, "model_epoch{}.pth".format(epoch)))
+    
+    state = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'subset': data_subset}
+    torch.save(state, os.path.join(learned_model_dir, "final_model.pth"))
+    logger.log("Done !!!")
+
+def load_checkpoint(model, optimizer, filename):
+    if os.path.isfile(filename):
+        print("=> loading checkpoint '{}'".format(filename))
+        checkpoint = torch.load(filename)
+        model.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        print("=> loaded checkpoint '{}'"
+                  .format(filename))
+    else:
+        print("=> no checkpoint found at '{}'".format(filename))
+
+    return model, optimizer
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -119,7 +153,7 @@ def get_model(model_name):
     else:
         return NotImplemented
     return model
-
+    
 def main():
     args = get_args()
     config = read_config_file(args.config_path)
@@ -129,21 +163,27 @@ def main():
     
     mode = args.mode
     model_name = args.model_name
-    learned_model_dir = config["LEARNED_MODEL_DIR"]
+    learned_model_dir = os.path.join(config["LEARNED_MODEL_DIR"], f"{model_name}/")
 
     if(args.config_path == "config/kaggle_finetune_wala.config"):
         from src.finetune.kaggle_dataset import KaggleCallGraphDataset
         train_dataset= KaggleCallGraphDataset(config, "train", model_name)
         test_dataset= KaggleCallGraphDataset(config, "test", model_name)
+        print("Dataset has {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
+        train_dataset1 =  Subset(train_dataset, range(0, len(train_dataset), 2))
+        train_dataset2 = Subset(train_dataset, range(1, len(train_dataset), 2))
+        print("Dataset 1 has {} train samples and dataset 2 has {} train samples".format(len(train_dataset1), len(train_dataset2)))
+        train_loader1 = DataLoader(train_dataset1, **TRAIN_PARAMS)
+        train_loader2 = DataLoader(train_dataset2, **TRAIN_PARAMS)
+        test_loader = DataLoader(test_dataset, **TEST_PARAMS)
     else:
         from src.finetune.dataset import CallGraphDataset
         train_dataset= CallGraphDataset(config, "train", model_name)
         test_dataset= CallGraphDataset(config, "test", model_name)
+        print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
+        train_loader = DataLoader(train_dataset, **TRAIN_PARAMS)
+        test_loader = DataLoader(test_dataset, **TEST_PARAMS)
 
-    print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
-
-    train_loader = DataLoader(train_dataset, **TRAIN_PARAMS)
-    test_loader = DataLoader(test_dataset, **TEST_PARAMS)
 
     model = get_model(model_name)
 
@@ -157,8 +197,10 @@ def main():
 
     if mode == "train":
         do_train(1, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
+    elif mode == "train_kaggle":
+        do_train_kaggle(1, train_loader1, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "test":
-        model.load_state_dict(torch.load(args.model_path))
+        model, optimizer = load_checkpoint(model, optimizer, args.model_path)
         do_test(test_loader, model)
     else:
         raise NotImplemented
