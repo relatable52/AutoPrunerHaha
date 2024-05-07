@@ -161,7 +161,7 @@ def main():
     model_name = args.model_name
     learned_model_dir = os.path.join(config["LEARNED_MODEL_DIR"], f"{model_name}/")
     if(not os.path.exists(learned_model_dir)):
-        os.mkdir(learned_model_dir)
+        os.makedirs(learned_model_dir)
 
     if(args.config_path == "config/kaggle_finetune_wala.config"):
         from src.finetune.kaggle_dataset import KaggleCallGraphDataset
