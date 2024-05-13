@@ -54,6 +54,9 @@ def main():
     mode = args.mode
     model_name = args.model_name
     save_finetune(config, mode, model_name)
+
+if __name__ == "__main__":
+    main()
     
 
 
