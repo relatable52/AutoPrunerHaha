@@ -148,6 +148,7 @@ def get_args():
     parser.add_argument("--mode", type=str, default="test") 
     parser.add_argument("--model_path", type=str, default="../replication_package/model/rq1/autopruner/wala.pth", help="Path to checkpoint (for test only)") 
     parser.add_argument("--feature", type=int, default=2, help="0: structure, 1: semantic, 2:combine")     
+    parser.add_argument("--model_name", type=str, default="codet5p-110m-embedding")
     return parser.parse_args()
 
 
@@ -158,11 +159,12 @@ def main():
     print("Mode: {}".format(args.mode))
     
     mode = args.mode
+    model_name = args.model_name
     learned_model_dir = config["CLASSIFIER_MODEL_DIR"]
 
 
-    train_dataset= FinetunedDataset(config, "train")
-    test_dataset= FinetunedDataset(config, "test")
+    train_dataset= FinetunedDataset(config, "train", model_name)
+    test_dataset= FinetunedDataset(config, "test", model_name)
 
     print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
 
