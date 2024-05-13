@@ -28,7 +28,8 @@ def save_finetune(config, mode, model_name):
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
     model.to(device)
-    model.load_state_dict(torch.load(model_path))
+    checkpoint = torch.load(model_path)
+    model.load_state_dict(checkpoint["state_dict"])
     loop=tqdm(enumerate(dataloader),leave=False,total=len(dataloader))
     for idx, batch in loop:
         ids=batch['ids'].to(device)
