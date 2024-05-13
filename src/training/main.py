@@ -139,6 +139,8 @@ def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer, learn
         logger.log("Evaluating ...")
         do_test(test_loader, model, False)
     logger.log("Saving model ...")
+    if(not os.path.exists(learned_model_dir)):
+        os.makedirs(learned_model_dir)
     torch.save(model.state_dict(), os.path.join(learned_model_dir, "model.pth"))
     logger.log("Done !!!")
 
