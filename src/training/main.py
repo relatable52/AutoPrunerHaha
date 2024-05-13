@@ -199,7 +199,7 @@ def main():
     optimizer= optim.Adam(model.parameters(),lr= 5e-6)
 
     if mode == "train":
-        do_train(5, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
+        do_train(8, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "test":
         model.load_state_dict(torch.load(args.model_path))
         do_test(test_loader, model, True)
