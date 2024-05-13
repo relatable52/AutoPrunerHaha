@@ -44,6 +44,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default="config/wala.config") 
     parser.add_argument("--model_name", type=str, default="codet5p-110m-embedding")
+    parser.add_argument("--mode", type=str, default="test")
     
     return parser.parse_args()
 
