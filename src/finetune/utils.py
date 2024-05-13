@@ -14,7 +14,7 @@ PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 8}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def save_finetune(config, mode, model_name):
-    dataset= CallGraphDataset(config, mode)
+    dataset= CallGraphDataset(config, mode, model_name)
     dataloader = DataLoader(dataset, **PARAMS)
     model_path = os.path.join(config["LEARNED_MODEL_DIR"], f"{model_name}/", "model.pth")
     save_dir = os.path.join(config["CACHE_DIR"], f"{model_name}/", "{}_finetuned".format(mode))
