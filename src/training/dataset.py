@@ -38,12 +38,12 @@ def compute_header(header_names, header):
     return [header + header_names[i] for i in range(len(header_names))]
 
 class FinetunedDataset(Dataset):
-    def __init__(self, config, mode):
+    def __init__(self, config, mode, model_name):
         self.mode = mode
         self.config = config
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
-        self.save_dir = self.config["CACHE_DIR"]
+        self.save_dir = os.path.join(self.config["CACHE_DIR"], f"{model_name}/")
         self.save_path = os.path.join(self.save_dir, f"ft_{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
         self.emd_dir = os.path.join(self.save_dir, f"{self.mode}_finetuned")
@@ -93,7 +93,7 @@ class FinetunedDataset(Dataset):
                 for i in tqdm(range(len(df['wiretap']))):
                     lb, sanity_check = df['wiretap'][i], df[self.config["SA_LABEL"]][i]
                     if self.mode != "train" or sanity_check == 1:
-                        batch_idx, in_batch_idx = idx//6, idx%6
+                        batch_idx, in_batch_idx = idx//10, idx%10
                         emb_path = os.path.join(self.emd_dir, f"{batch_idx}.npy")
                         self.code_feats.append(np.load(emb_path)[in_batch_idx])
                         self.struct_feats.append(features[i])
@@ -133,5 +133,5 @@ class FinetunedDataset(Dataset):
 
 if __name__ == '__main__':
     config = read_config_file("config/wala.config")
-    data = FinetunedDataset(config, "train")
-    data = FinetunedDataset(config, "test")
+    data = FinetunedDataset(config, "train", "codet5p-110m-embedding")
+    data = FinetunedDataset(config, "test", "codet5p-110m-embedding")
