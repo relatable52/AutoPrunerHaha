@@ -128,7 +128,7 @@ def do_test(dataloader, model, is_write=False):
 
 
 
-def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer):
+def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir):
     cfx_matrix = np.array([[0, 0],
                            [0, 0]])
     mean_loss = AverageMeter()
@@ -138,7 +138,8 @@ def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer):
         
         logger.log("Evaluating ...")
         do_test(test_loader, model, False)
-    
+    logger.log("Saving model ...")
+    torch.save(model.state_dict(), os.path.join(learned_model_dir, "model.pth"))
     logger.log("Done !!!")
 
 
@@ -160,7 +161,7 @@ def main():
     
     mode = args.mode
     model_name = args.model_name
-    learned_model_dir = config["CLASSIFIER_MODEL_DIR"]
+    learned_model_dir = os.path.join(config["CLASSIFIER_MODEL_DIR"], f"{model_name}/")
 
 
     train_dataset= FinetunedDataset(config, "train", model_name)
