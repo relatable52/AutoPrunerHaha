@@ -16,7 +16,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def save_finetune(config, mode, model_name):
     dataset= CallGraphDataset(config, mode, model_name)
     dataloader = DataLoader(dataset, **PARAMS)
-    model_path = os.path.join(config["LEARNED_MODEL_DIR"], f"{model_name}/", "model.pth")
+    model_path = os.path.join(config["LEARNED_MODEL_DIR"], f"{model_name}/", "final_model.pth")
     save_dir = os.path.join(config["CACHE_DIR"], f"{model_name}/", "{}_finetuned".format(mode))
     
     if not os.path.exists(save_dir):
