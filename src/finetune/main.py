@@ -15,8 +15,8 @@ warnings.filterwarnings("ignore")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-TRAIN_PARAMS = {'batch_size': 4, 'shuffle': True, 'num_workers': 2}
-TEST_PARAMS = {'batch_size': 4, 'shuffle': False, 'num_workers': 2}
+TRAIN_PARAMS = {'batch_size': 8, 'shuffle': True, 'num_workers': 2}
+TEST_PARAMS = {'batch_size': 8, 'shuffle': False, 'num_workers': 2}
 
 logger = Logger()
 
