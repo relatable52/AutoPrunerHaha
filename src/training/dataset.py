@@ -93,7 +93,7 @@ class FinetunedDataset(Dataset):
                 for i in tqdm(range(len(df['wiretap']))):
                     lb, sanity_check = df['wiretap'][i], df[self.config["SA_LABEL"]][i]
                     if self.mode != "train" or sanity_check == 1:
-                        batch_idx, in_batch_idx = idx//6, idx%6
+                        batch_idx, in_batch_idx = idx//10 , idx%10
                         emb_path = os.path.join(self.emd_dir, f"{batch_idx}.npy")
                         self.code_feats.append(np.load(emb_path)[in_batch_idx])
                         self.struct_feats.append(features[i])

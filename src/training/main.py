@@ -16,6 +16,7 @@ import torch
 import math
 # Import statistics Library
 import statistics
+from src.utils.loss_fn import get_loss_fn
 
 warnings.filterwarnings("ignore")
 
@@ -147,7 +148,9 @@ def get_args():
     parser.add_argument("--config_path", type=str, default="config/wala.config") 
     parser.add_argument("--mode", type=str, default="test") 
     parser.add_argument("--model_path", type=str, default="../replication_package/model/rq1/autopruner/wala.pth", help="Path to checkpoint (for test only)") 
-    parser.add_argument("--feature", type=int, default=2, help="0: structure, 1: semantic, 2:combine")     
+    parser.add_argument("--feature", type=int, default=2, help="0: structure, 1: semantic, 2:combine")
+    parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--loss_fn", type=str, default="cross_entropy")
     return parser.parse_args()
 
 
@@ -158,6 +161,7 @@ def main():
     print("Mode: {}".format(args.mode))
     
     mode = args.mode
+    epochs = args.epochs
     learned_model_dir = config["CLASSIFIER_MODEL_DIR"]
 
 
@@ -189,12 +193,12 @@ def main():
     model.apply(init_weights)
     
 
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = get_loss_fn(args.loss_fn)
 
     optimizer= optim.Adam(model.parameters(),lr= 5e-6)
 
     if mode == "train":
-        do_train(5, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
+        do_train(args.epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "test":
         model.load_state_dict(torch.load(args.model_path))
         do_test(test_loader, model, True)

@@ -11,13 +11,12 @@ import argparse
 from src.utils.utils import Logger, AverageMeter, evaluation_metrics, read_config_file
 import os
 import warnings
+from src.utils.loss_fn import get_loss_fn
 
 warnings.filterwarnings("ignore")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-TRAIN_PARAMS = {'batch_size': 15, 'shuffle': True, 'num_workers': 8}
-TEST_PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 8}
 
 logger = Logger()
 
@@ -102,12 +101,17 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default="config/wala.config") 
     parser.add_argument("--model_path", type=str, default="../replication_package/model/finetuned_model/model.pth", help="Path to checkpoint (for test only)") 
-    parser.add_argument("--mode", type=str, default="train") 
-    
+    parser.add_argument("--mode", type=str, default="train")
+    parser.add_argument("--epochs", type=int, default=2)
+    parser.add_argument("--loss_fn", type=str, default="cross_entropy")
+    parser.add_argument("--train_batch_size", type=int, default=15)
+    parser.add_argument("--test_batch_size", type=int, default=10)
     return parser.parse_args()
 
 def main():
     args = get_args()
+    TRAIN_PARAMS = {'batch_size': args.train_batch_size, 'shuffle': True, 'num_workers': 8}
+    TEST_PARAMS = {'batch_size': args.test_batch_size, 'shuffle': False, 'num_workers': 8}
     config = read_config_file(args.config_path)
     print("Running on config {}".format(args.config_path))
     print("Mode: {}".format(args.mode))
@@ -131,11 +135,11 @@ def main():
         model = nn.DataParallel(model)
     model.to(device)
 
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = get_loss_fn(args.loss_fn)
     optimizer= optim.Adam(model.parameters(),lr= 0.00001)
 
     if mode == "train":
-        do_train(2, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
+        do_train(args.epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "test":
         model.load_state_dict(torch.load(args.model_path))
         do_test(test_loader, model)
