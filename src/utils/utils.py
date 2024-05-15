@@ -16,7 +16,7 @@ def read_config_file(config_file):
 def get_input_and_mask(src, dst , max_length, tokenizer):
     src_tokens = tokenizer.tokenize(src)
     dst_tokens = tokenizer.tokenize(dst)
-    tokens=[tokenizer.cls_token]+src_tokens+[tokenizer.sep_token]+dst_tokens+[tokenizer.sep_token]
+    tokens=[tokenizer.eos_token]+src_tokens+[tokenizer.bos_token]+dst_tokens+[tokenizer.bos_token]
     token_length = len(tokens)
     if  token_length > max_length:
         truncation_ratio = max_length/token_length
