@@ -36,7 +36,7 @@ class KaggleCallGraphDataset(Dataset):
 
         self.max_length = 512
 
-        if (self.mode == "train") or (self.mode=="train_kaggle"):
+        if (self.mode == "train"):
             self.program_lists = os.path.join(self.config["TRAINING_PROGRAMS_LIST"])
         elif self.mode == "test":
             self.program_lists = os.path.join(self.config["TEST_PROGRAMS_LIST"])
