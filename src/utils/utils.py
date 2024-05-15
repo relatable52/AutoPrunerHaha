@@ -34,6 +34,10 @@ def get_input_and_mask(src, dst , max_length, tokenizer):
         new_tokens = [tokens[i] if i < token_length else tokenizer.pad_token for i in range(max_length)]
         mask = [1 if i < token_length else 0 for i in range(max_length)]
 
+    print(src)
+    print(dst)
+    print(src_tokens)
+    print(dst_tokens)
     print(new_tokens)
     tokens_ids= tokenizer.convert_tokens_to_ids(new_tokens)
     if len(tokens_ids) > max_length:
