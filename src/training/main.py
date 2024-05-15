@@ -68,7 +68,7 @@ def do_test(dataloader, model, is_write=False):
     result_per_programs = {}
     for i in range(41):
         result_per_programs[i] = {'lb': [], 'output': []}
-    
+
     all_outputs = []
     all_labels = []
     loop=tqdm(enumerate(dataloader),leave=False,total=len(dataloader))
@@ -86,26 +86,26 @@ def do_test(dataloader, model, is_write=False):
         output = output * sanity_check
         pred = np.where(output >= 0.5, 1, 0)
         label = label.detach().cpu().numpy()
-        
+
         for i in range(len(label)):
             prog_idx, out, lb = program_ids[i], output[i], label[i]
             result_per_programs[prog_idx]['lb'].append(lb)
             result_per_programs[prog_idx]['output'].append(out)
             all_outputs.append(out)
             all_labels.append(lb)
-        
+
         cfx_matrix, precision, recall, f1 = evaluation_metrics(label, pred, cfx_matrix)
         loop.set_postfix(pre=precision, rec=recall, f1 = f1)
-    
+
     if is_write:
         np.save("prediction.npy", np.array(all_outputs))  
-    
+
     (tn, fp), (fn, tp) = cfx_matrix
     precision = tp/(tp + fp)
     recall = tp/(tp + fn)
     f1 = 2*precision*recall/(precision + recall)
     logger.log("[EVAL] Iter {}, Precision {}, Recall {}, F1 {}".format(idx, precision, recall, f1))
-    
+
     precision_avg, recall_avg, f1_avg = [], [], []
     for i in range(41):
         lb = np.array(result_per_programs[i]['lb'])
@@ -128,18 +128,24 @@ def do_test(dataloader, model, is_write=False):
                                                                                             round(statistics.stdev(f1_avg), 2)))
 
 
-
-def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer):
+def do_train(
+    epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir
+):
     cfx_matrix = np.array([[0, 0],
                            [0, 0]])
     mean_loss = AverageMeter()
     for epoch in range(epochs):
         logger.log("Start training at epoch {} ...".format(epoch))
         model, cfx_matrix = train(train_loader, model, mean_loss, loss_fn, optimizer, cfx_matrix)
-        
+
         logger.log("Evaluating ...")
         do_test(test_loader, model, False)
-    
+
+    logger.log("Done !!!")
+    logger.log("Saving model ...")
+    if not os.path.exists(learned_model_dir):
+        os.makedirs(learned_model_dir)
+    torch.save(model.state_dict(), os.path.join(learned_model_dir, "model.pth"))
     logger.log("Done !!!")
 
 
@@ -204,7 +210,6 @@ def main():
         do_test(test_loader, model, True)
     else:
         raise NotImplemented
-    
 
 
 if __name__ == '__main__':
