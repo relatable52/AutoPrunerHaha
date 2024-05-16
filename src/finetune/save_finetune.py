@@ -24,7 +24,7 @@ def save_finetune(config, mode, model_name, loss_fn):
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    else:
+    if len(os.listdir(save_dir)) > 0:
         print("Directory {} already exists".format(save_dir))
         return
 
