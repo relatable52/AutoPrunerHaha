@@ -35,7 +35,7 @@ def save_finetune(config, mode, model_name, loss_fn):
         model = nn.DataParallel(model)
     model.to(device)
     checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint["state_dict"])
+    model.load_state_dict(checkpoint)
     loop = tqdm(enumerate(dataloader), leave=False, total=len(dataloader))
     for idx, batch in loop:
         ids = batch["ids"].to(device)

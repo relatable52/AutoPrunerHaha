@@ -43,7 +43,7 @@ class CallGraphDataset(Dataset):
         else:
             return NotImplemented
 
-        print(self.has_cache())
+        # print(self.has_cache())
         if self.has_cache():
             self.load()
         elif self.model_name in models_dict:
