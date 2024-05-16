@@ -57,3 +57,6 @@ def main():
     config = read_config_file(args.config_path)
     save_finetune(config, "train", args.model_name, args.loss_fn)
     save_finetune(config, "test", args.model_name, args.loss_fn)
+    
+if __name__ == "__main__":
+    main()
