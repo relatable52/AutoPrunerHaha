@@ -14,17 +14,23 @@ import numpy as np
 from torch import nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 8} 
+PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 8}
+models_dict = {
+    "codebert": "microsoft/codebert-base",
+    "codet5-base": "Salesforce/codet5-base",
+    "codet5p-770m": "Salesforce/codet5p-770m",
+    "codet5p-110m-embedding": "Salesforce/codet5p-110m-embedding",
+    "codesage": "codesage/codesage-small",
+}
 
 class CallGraphDataset(Dataset):
-    def __init__(self, config, mode):
+    def __init__(self, config, mode, model_name):
         self.mode = mode
         self.train_mode = mode
         self.config = config
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
-        self.save_dir = self.config["CACHE_DIR"]
-        # self.size_mode = size_mode
+        self.save_dir = os.path.join(self.config["CACHE_DIR"], model_name)
         self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
 
@@ -40,15 +46,16 @@ class CallGraphDataset(Dataset):
         print(self.has_cache())
         if self.has_cache():
             self.load()
-        else:
-            self.tokenizer = AutoTokenizer.from_pretrained("microsoft/codebert-base")
+        elif self.model_name in models_dict:
+            self.tokenizer = AutoTokenizer.from_pretrained(models_dict[self.model_name])
             self.process()
             self.save()
+        else:
+            return NotImplemented
 
-    
     def __len__(self):
         return len(self.data)
-    
+
     def __getitem__(self, index):
         ids = self.data[index]
         mask = self.mask[index]
@@ -58,7 +65,7 @@ class CallGraphDataset(Dataset):
             'label': torch.tensor(self.labels[index], dtype=torch.long),
             'static': torch.tensor(self.static_ids[index], dtype=torch.long),
             }
-    
+
     def process(self):
         self.data = []
         self.mask = []
@@ -77,20 +84,20 @@ class CallGraphDataset(Dataset):
                     if self.mode != "train" or sanity_check == 1:
 
                         descriptor2code = load_code(os.path.join(self.processed_path, filename, 'code.csv'))
-                        
+
                         if src != '<boot>':
                             if src in descriptor2code:
                                 src = descriptor2code[src]
                             else:
                                 src = convert(src).__tocode__()
-                        
+
                         dst_descriptor = convert(dst)
-                        
+
                         if dst in descriptor2code:
                             dst = descriptor2code[dst]
                         else:
                             dst = dst_descriptor.__tocode__()
-                        
+
                         token_ids, mask = get_input_and_mask(src, dst, self.max_length, self.tokenizer)
                         self.data.append(token_ids)
                         self.mask.append(mask)
@@ -121,7 +128,7 @@ class CallGraphDataset(Dataset):
             return True
         return False
 
-if __name__ == '__main__':
-    config = read_config_file("config/wala.config")
-    data = CallGraphDataset(config, "test")
-    data = CallGraphDataset(config, "train")
+# if __name__ == '__main__':
+#     config = read_config_file("config/wala.config")
+#     data = CallGraphDataset(config, "test")
+#     data = CallGraphDataset(config, "train")

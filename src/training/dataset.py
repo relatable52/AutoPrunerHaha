@@ -38,12 +38,12 @@ def compute_header(header_names, header):
     return [header + header_names[i] for i in range(len(header_names))]
 
 class FinetunedDataset(Dataset):
-    def __init__(self, config, mode):
+    def __init__(self, config, mode, model_name, loss_fn):
         self.mode = mode
         self.config = config
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
-        self.save_dir = self.config["CACHE_DIR"]
+        self.save_dir = os.path.join(self.config["CACHE_DIR"], model_name, loss_fn)
         self.save_path = os.path.join(self.save_dir, f"ft_{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
         self.emd_dir = os.path.join(self.save_dir, f"{self.mode}_finetuned")
@@ -70,7 +70,6 @@ class FinetunedDataset(Dataset):
         return {
             'code': torch.tensor(self.code_feats[index], dtype=torch.float),
             'struct': torch.tensor(struct_feats, dtype=torch.float),
-            # 'struct': torch.tensor(self.struct_feats[index], dtype=torch.float),
             'label': torch.tensor(self.labels[index], dtype=torch.long),
             'static': torch.tensor(self.static_ids[index], dtype=torch.float),
             'program_ids': self.program_ids[index]

@@ -1,9 +1,9 @@
 from torch import nn
 import torch
 class NNClassifier_Combine(nn.Module):
-    def __init__(self, hidden_size = 16):
+    def __init__(self, input_size=768, hidden_size = 16):
         super(NNClassifier_Combine, self).__init__()
-        self.encoder1 = nn.Linear(768, hidden_size)
+        self.encoder1 = nn.Linear(input_size, hidden_size)
         self.encoder2 = nn.Linear(22, hidden_size)
         self.decoder = nn.Linear(2 * hidden_size, 2)
 
