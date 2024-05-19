@@ -24,6 +24,15 @@ models_dict = {
     "plbart": "uclanlp/plbart-base"
 }
 
+max_length_dict = {
+    "codebert": 512,
+    "codet5-base": 512,
+    "codet5p-770m": 512,
+    "codet5p-110m-embedding": 512,
+    "codesage": 2048,
+    "plbart": 1024
+}
+
 class CallGraphDataset(Dataset):
     def __init__(self, config, mode, model_name):
         self.mode = mode
@@ -35,7 +44,7 @@ class CallGraphDataset(Dataset):
         self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
 
-        self.max_length = 512
+        self.max_length = max_length_dict[model_name]
 
         if self.mode == "train":
             self.program_lists = os.path.join(self.config["TRAINING_PROGRAMS_LIST"])
