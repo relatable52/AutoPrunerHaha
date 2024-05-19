@@ -1,7 +1,6 @@
-from transformers import AutoModel, T5EncoderModel
+from transformers import AutoModel, T5EncoderModel, PLBartModel
 from torch import nn
 class BERT(nn.Module):
-
     def __init__(self):
         super(BERT, self).__init__()
         self.bert_model = AutoModel.from_pretrained("microsoft/codebert-base")
@@ -71,6 +70,17 @@ class CodeSageBase(nn.Module):
         out = self.out(emb)
         return out, emb
 
+class PLBart(nn.Module):
+    def __init__(self):
+        super(PLBart, self).__init__()
+        self.plbart_model = PLBartModel.from_pretrained("uclanlp/plbart-base")
+        self.out = nn.Linear(768, 2)
+
+    def forward(self, ids, mask):
+        emb = self.plbart_model(input_ids = ids, attention_mask=mask)[0][0][0]
+        out = self.out(emb)
+        return out, emb
+
 
 def get_model(model_name):
     models_dict = {
@@ -79,6 +89,7 @@ def get_model(model_name):
         "codet5p-770m": CodeT5pEnc,
         "codet5p-110m-embedding": CodeT5pEmb,
         "codesage": CodeSageBase,
+        "plbart": PLBart
     }
     if model_name in models_dict:
         model = models_dict[model_name]()
@@ -93,6 +104,7 @@ def get_emb_size(model_name):
         "codet5p-770m": 1024,
         "codet5p-110m-embedding": 256,
         "codesage": 1024,
+        "plbart": 768
     }
     if model_name in emb_size_dict:
         emb_size = emb_size_dict[model_name]
