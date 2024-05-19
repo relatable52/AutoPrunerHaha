@@ -46,8 +46,8 @@ class CallGraphDataset(Dataset):
         # print(self.has_cache())
         if self.has_cache():
             self.load()
-        elif self.model_name in models_dict:
-            self.tokenizer = AutoTokenizer.from_pretrained(models_dict[self.model_name])
+        elif model_name in models_dict:
+            self.tokenizer = AutoTokenizer.from_pretrained(models_dict[model_name])
             self.process()
             self.save()
         else:
