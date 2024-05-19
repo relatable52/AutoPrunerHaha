@@ -8,10 +8,6 @@ from dgl.data.utils import save_info, load_info
 from tqdm import tqdm
 from src.utils.utils import read_config_file, load_code, get_input_and_mask
 from src.utils.converter import convert
-from torch.utils.data import DataLoader
-from src.finetune.model import BERT
-import numpy as np
-from torch import nn
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 8}
