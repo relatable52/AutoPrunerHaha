@@ -1,4 +1,4 @@
-from transformers import AutoModel, T5EncoderModel, 
+from transformers import AutoModel, T5EncoderModel
 from torch import nn
 class BERT(nn.Module):
 
