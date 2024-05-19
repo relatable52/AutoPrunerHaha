@@ -21,6 +21,7 @@ models_dict = {
     "codet5p-770m": "Salesforce/codet5p-770m",
     "codet5p-110m-embedding": "Salesforce/codet5p-110m-embedding",
     "codesage": "codesage/codesage-small",
+    "plbart": "uclanlp/plbart-base"
 }
 
 class CallGraphDataset(Dataset):
