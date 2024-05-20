@@ -60,7 +60,9 @@ class CodeT5pEmb(nn.Module):
 class CodeSageBase(nn.Module):
     def __init__(self):
         super(CodeSageBase, self).__init__()
-        self.codesage_model = AutoModel.from_pretrained("codesage/codesage-small")
+        self.codesage_model = AutoModel.from_pretrained(
+            "codesage/codesage-small", trust_remote_code=True
+        )
         self.out = nn.Linear(1024, 2)
 
     def forward(self, ids, mask):
