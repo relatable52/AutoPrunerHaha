@@ -35,8 +35,7 @@ def do_test(logger, test_loader, model, test_g_loader, g_model, ensemble="max"):
     for i in range(41):
         result_per_programs[i] = {"lb": [], "output": [], "g_output": []}
 
-    for i in tqdm(range(len(test_loader))):
-        batch = test_loader[i]
+    for i, batch in tqdm(enumerate(test_loader)):
         code = batch["code"].to(device)
         struct = batch["struct"].to(device)
         label = batch["label"].to(device)
