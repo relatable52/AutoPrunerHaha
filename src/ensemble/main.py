@@ -119,8 +119,7 @@ def main():
     )
     model.load_state_dict(torch.load(model_checkpoint))
     
-    test_g_dataset = CallGraphDataset(config, "test")
-    test_g_loader = DataLoader(test_g_dataset, **TEST_PARAMS)
+    test_g_loader = CallGraphDataset(config, "test")
     g_model = GCNModel(config, 32)
     g_model.to(device)
     g_model_checkpoint = os.path.join(config["GNN_MODEL_DIR"], "gnn_wala.pth")
