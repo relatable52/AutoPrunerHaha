@@ -113,6 +113,7 @@ def main():
     test_ft_dataset = FinetunedDataset(config, "test", args.model, args.loss_fn)
     test_ft_loader = DataLoader(test_ft_dataset, **TEST_PARAMS)
     model = NNClassifier_Combine(input_size=get_emb_size(args.model), hidden_size=32)
+    model.to(device)
     model_checkpoint = os.path.join(
         config["CLASSIFIER_MODEL_DIR"], args.model, args.loss_fn, "model.pth"
     )
@@ -121,6 +122,7 @@ def main():
     test_g_dataset = CallGraphDataset(config, "test")
     test_g_loader = DataLoader(test_g_dataset, **TEST_PARAMS)
     g_model = GCNModel(config, 32)
+    g_model.to(device)
     g_model_checkpoint = os.path.join(config["GNN_MODEL_DIR"], "gnn_wala.pth")
     g_model.load_state_dict(torch.load(g_model_checkpoint))
 
