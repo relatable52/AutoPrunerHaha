@@ -66,7 +66,7 @@ def do_test(logger, test_loader, model, test_g_loader, g_model, ensemble="max"):
         output = output * sa_lb
         lb = lb.detach().cpu().numpy()
         assert (
-            lb == result_per_programs[idx]["lb"]
+            (lb == result_per_programs[idx]["lb"]).all()
         ), f"Mismatch labels in program ids {idx}"
         result_per_programs[idx]["g_output"] = output
 
