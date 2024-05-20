@@ -122,7 +122,7 @@ def main():
     test_g_dataset = CallGraphDataset(config, "test")
     test_g_loader = DataLoader(test_g_dataset, **TEST_PARAMS)
     g_model = GCNModel(config, 32)
-    g_model_checkpoint = os.path.join(config["GNN_CACHE_DIR"], "gnn_wala.pth")
+    g_model_checkpoint = os.path.join(config["GNN_MODEL_DIR"], "gnn_wala.pth")
     g_model.load_state_dict(torch.load(g_model_checkpoint))
 
     do_test(logger, test_ft_loader, model, test_g_loader, g_model)
