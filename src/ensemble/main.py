@@ -59,7 +59,7 @@ def do_test(logger, test_loader, model, test_g_loader, g_model, ensemble="max"):
         g = g.to(device)
         lb = lb.to(device)
         sa_lb = sa_lb
-        g = model(g)
+        g = g_model(g)
 
         output = g.edata["prob"]
         output = output.detach().cpu().numpy()[:, 1]
