@@ -77,7 +77,8 @@ class PLBart(nn.Module):
         self.out = nn.Linear(768, 2)
 
     def forward(self, ids, mask):
-        emb = self.plbart_model(input_ids = ids, attention_mask=mask)[0][0][0]
+        emb = self.plbart_model(input_ids = ids, attention_mask=mask)[0]
+        emb = emb[:, -1]
         out = self.out(emb)
         return out, emb
 
