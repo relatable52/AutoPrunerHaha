@@ -65,7 +65,7 @@ class CallGraphDataset(Dataset):
                 self.logger.info(cnt)
                 cnt += 1
                 filename = line.strip()
-                self.logger.info(f"[{cnt}/{len(f)}] Processing {filename} ...")
+                self.logger.info(f"[{cnt}] Processing {filename} ...")
                 file_path = os.path.join(self.raw_data_path, filename, self.cg_file)
                 df = pd.read_csv(file_path)
                 for i in tqdm(range(len(df['wiretap']))):
