@@ -12,13 +12,13 @@ from src.finetune.model import EmbeddingModel
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def save_finetune(config, mode, model, loss_fn, logger, batch_size=10):
+def save_finetune(config, mode, model_name, loss_fn, logger, batch_size=10):
     PARAMS = {"batch_size": batch_size, "shuffle": False, "num_workers": 8}
-    dataset = CallGraphDataset(config, mode, model, logger)
+    dataset = CallGraphDataset(config, mode, model_name, logger)
     dataloader = DataLoader(dataset, **PARAMS)
     model_path = os.path.join(
         config["LEARNED_MODEL_DIR"],
-        model,
+        model_name,
         loss_fn,
     )
     with open(
@@ -29,7 +29,7 @@ def save_finetune(config, mode, model, loss_fn, logger, batch_size=10):
     model_path = os.path.join(model_path, best_model)
     save_dir = os.path.join(
         config["CACHE_DIR"],
-        model,
+        model_name,
         loss_fn,
         "{}_finetuned_{}".format(mode, batch_size),
     )
@@ -39,7 +39,7 @@ def save_finetune(config, mode, model, loss_fn, logger, batch_size=10):
     if len(os.listdir(save_dir)) > 0:
         logger.info("Directory {} already exists".format(save_dir))
         return
-    model_name, model_size = model.split("-")
+    model_name, model_size = model_name.split("-")
     model = EmbeddingModel(model_name, model_size)
 
     if torch.cuda.device_count() > 1:

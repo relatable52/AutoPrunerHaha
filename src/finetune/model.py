@@ -50,13 +50,13 @@ models = {
 }
 
 
-class Embedding(nn.Module):
+class EmbeddingModel(nn.Module):
     def __init__(self, model_name, model_size):
         assert self.model_name not in models, f"Model name {self.model_name} not found"
         assert (
             self.embed_size not in models[self.model_name]["size"]
         ), f"Model size {self.model_size} not found in {self.model_name}"
-        super(Embedding, self).__init__()
+        super(EmbeddingModel, self).__init__()
         self.name = model_name
         self.model_size = model_size
         self.encoder = self.load_model()
