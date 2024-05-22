@@ -20,3 +20,6 @@ def main():
     log_path = os.path.join(log_path, "preload_for_finetune_{}_{}.log".format(args.model, args.mode))
     logger = Logger(log_path)
     CallGraphDataset(config, args.mode, args.model, logger)
+
+if __name__ == "__main__":
+    main()
