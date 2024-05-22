@@ -70,5 +70,5 @@ class Embedding(nn.Module):
 
     def load_model(self):
         return models[self.model_name]["model"].from_pretrained(
-            models[self.model_name]["size"][self.model_size]["pretrained_name"]
+            models[self.model_name]["pretrained_name"][self.model_size]
         )
