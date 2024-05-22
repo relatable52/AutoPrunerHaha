@@ -57,7 +57,7 @@ class EmbeddingModel(nn.Module):
             model_size in models[model_name]["pretrained_name"]
         ), f"Model size {self.model_size} not found in {self.model_name}"
         super(EmbeddingModel, self).__init__()
-        self.name = model_name
+        self.model_name = model_name
         self.model_size = model_size
         self.encoder = self.load_model()
         emb_size = models[self.model_name]["embedding_size"]
