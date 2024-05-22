@@ -5,8 +5,7 @@ import os
 
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument("--model", type=str, default="codebert-base")
-    parser.add_argument("--loss_fn", type=str, default="cross_entropy")
+    parser.add_argument("--model_name", type=str, default="codebert")
     parser.add_argument("--config_path", type=str, default="config/wala.config") 
     parser.add_argument("--mode", type=str, default="train")
     parser.add_argument("--log_dir", type=str, default="log")
@@ -15,7 +14,6 @@ def get_args():
 def main():
     args = get_args()
     config = read_config_file(args.config_path)
-    model_name, _ = args.model.split("-")
     log_path = os.path.join(args.log_dir, "preload")
     if not os.path.exists(log_path):
         os.makedirs(log_path)
