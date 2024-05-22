@@ -213,7 +213,7 @@ def main():
     test_loader = DataLoader(test_dataset, **TEST_PARAMS)
 
     # Model, loss function, optimizer
-    model = EmbeddingModel(args.model_name, args.model_size)
+    model = EmbeddingModel(model_name, args.model_size)
 
     if torch.cuda.device_count() > 1:
         logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
