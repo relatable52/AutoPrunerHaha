@@ -52,9 +52,9 @@ models = {
 
 class EmbeddingModel(nn.Module):
     def __init__(self, model_name, model_size):
-        assert model_name not in models, f"Model name {model_name} not found"
+        assert model_name in models, f"Model name {model_name} not found"
         assert (
-            model_size not in models[model_name]["pretrained_name"]
+            model_size in models[model_name]["pretrained_name"]
         ), f"Model size {self.model_size} not found in {self.model_name}"
         super(EmbeddingModel, self).__init__()
         self.name = model_name
