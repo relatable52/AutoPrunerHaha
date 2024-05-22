@@ -222,10 +222,10 @@ def main():
         os.makedirs(learned_model_dir)
 
     train_dataset = FinetunedDataset(
-        config, "train", model_name, model_size, args.loss_fn, logger
+        config, "train", args.model, args.loss_fn, logger
     )
     test_dataset = FinetunedDataset(
-        config, "test", model_name, model_size, args.loss_fn, logger
+        config, "test", args.model, args.loss_fn, logger
     )
 
     logger.info(

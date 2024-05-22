@@ -190,8 +190,8 @@ def main():
 
     # Dataset
     model_name, model_size = args.model.split("-")
-    train_dataset = CallGraphDataset(config, "train", model_name, logger)
-    test_dataset = CallGraphDataset(config, "test", model_name, logger)
+    train_dataset = CallGraphDataset(config, "train", args.model, logger)
+    test_dataset = CallGraphDataset(config, "test", args.model, logger)
 
     logger.info(
         "Dataset have {} train samples and {} test samples".format(
@@ -218,7 +218,7 @@ def main():
     if torch.cuda.device_count() > 1:
         logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-    
+
     loss_fn = get_loss_fn(args.loss_fn)
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 

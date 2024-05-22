@@ -12,13 +12,13 @@ from src.finetune.model import EmbeddingModel
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def save_finetune(config, mode, model_name, model_size, loss_fn, logger, batch_size=10):
+def save_finetune(config, mode, model, loss_fn, logger, batch_size=10):
     PARAMS = {"batch_size": batch_size, "shuffle": False, "num_workers": 8}
-    dataset = CallGraphDataset(config, mode, model_name)
+    dataset = CallGraphDataset(config, mode, model, logger)
     dataloader = DataLoader(dataset, **PARAMS)
     model_path = os.path.join(
         config["LEARNED_MODEL_DIR"],
-        f"{model_name}-{model_size}",
+        model,
         loss_fn,
     )
     with open(
@@ -29,10 +29,9 @@ def save_finetune(config, mode, model_name, model_size, loss_fn, logger, batch_s
     model_path = os.path.join(model_path, best_model)
     save_dir = os.path.join(
         config["CACHE_DIR"],
-        model_name,
-        model_size,
+        model,
         loss_fn,
-        "{}_finetuned_{}".format(mode),
+        "{}_finetuned_{}".format(mode, batch_size),
     )
 
     if not os.path.exists(save_dir):
@@ -40,7 +39,7 @@ def save_finetune(config, mode, model_name, model_size, loss_fn, logger, batch_s
     if len(os.listdir(save_dir)) > 0:
         logger.info("Directory {} already exists".format(save_dir))
         return
-
+    model_name, model_size = model.split("-")
     model = EmbeddingModel(model_name, model_size)
 
     if torch.cuda.device_count() > 1:
@@ -64,8 +63,7 @@ def get_args():
     parser.add_argument(
         "--config_path", type=str, default="config/wala.config", required=True
     )
-    parser.add_argument("--model_name", type=str, default="codebert", required=True)
-    parser.add_argument("--model_size", type=str, default="base", required=True)
+    parser.add_argument("--model", type=str, default="codebert-base", required=True)
     parser.add_argument("--loss_fn", type=str, default="cross_entropy", required=True)
     parser.add_argument("--batch_size", type=int, default=10)
     parser.add_argument("--mode", type=str, default="train")
@@ -81,7 +79,7 @@ def main():
         os.makedirs(log_path)
     log_path = os.path.join(log_path, "save_finetune_{}_{}.log".format(args.model_name, args.mode))
     logger = Logger(log_path)
-    save_finetune(config, args.mode, args.model_name, args.loss_fn, logger, args.batch_size)
+    save_finetune(config, args.mode, args.model, args.loss_fn, logger, args.batch_size)
 
 
 if __name__ == "__main__":

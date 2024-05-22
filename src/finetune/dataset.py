@@ -10,14 +10,15 @@ from dgl.data.utils import save_info, load_info
 from tqdm import tqdm
 
 class CallGraphDataset(Dataset):
-    def __init__(self, config, mode, model_name, logger):
+    def __init__(self, config, mode, model, logger):
         self.mode = mode
-        self.model_name = model_name
+        model_name, model_size = model.split("-")
+        self.model = model
         self.config = config
         self.logger = logger
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
-        self.save_dir = os.path.join(self.config["CACHE_DIR"], model_name)
+        self.save_dir = os.path.join(self.config["CACHE_DIR"], model)
         self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
 
@@ -33,7 +34,7 @@ class CallGraphDataset(Dataset):
         if self.has_cache():
             self.load()
         elif model_name in models:
-            self.tokenizer = AutoTokenizer.from_pretrained(models[model_name]["pretrained_name"])
+            self.tokenizer = AutoTokenizer.from_pretrained(models[model_name][model_size]["pretrained_name"])
             self.process()
             self.save()
         else:
@@ -53,7 +54,7 @@ class CallGraphDataset(Dataset):
             }
 
     def process(self):
-        self.logger.info(f"Processing data using {self.model_name} model ...")
+        self.logger.info(f"Processing data using {self.model} model ...")
         self.data = []
         self.mask = []
         self.static_ids = []

@@ -8,6 +8,7 @@ models = {
         "max_length": 512,
         "pretrained_name": {
             "base": "microsoft/codebert-base",
+            "large": "microsoft/codebert-large",
         },
     },
     "codet5": {
@@ -25,6 +26,7 @@ models = {
         "max_length": 1024,
         "pretrained_name": {
             "base": "uclanlp/plbart-base",
+            "large": "uclanlp/plbart-large",
         },
     },
     "codet5p": {

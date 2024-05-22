@@ -40,14 +40,14 @@ def compute_header(header_names, header):
 
 
 class FinetunedDataset(Dataset):
-    def __init__(self, config, mode, model_name, model_size, loss_fn, logger):
+    def __init__(self, config, mode, model, loss_fn, logger):
         self.mode = mode
         self.config = config
         self.logger = logger
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
         self.save_dir = os.path.join(
-            self.config["CACHE_DIR"], model_name, model_size, loss_fn
+            self.config["CACHE_DIR"], model, loss_fn
         )
         self.save_path = os.path.join(self.save_dir, f"ft_{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
