@@ -52,15 +52,15 @@ models = {
 
 class EmbeddingModel(nn.Module):
     def __init__(self, model_name, model_size):
-        assert self.model_name not in models, f"Model name {self.model_name} not found"
+        assert model_name not in models, f"Model name {model_name} not found"
         assert (
-            self.embed_size not in models[self.model_name]["size"]
+            model_size not in models[model_name]["pretrained_name"]
         ), f"Model size {self.model_size} not found in {self.model_name}"
         super(EmbeddingModel, self).__init__()
         self.name = model_name
         self.model_size = model_size
         self.encoder = self.load_model()
-        emb_size = models[self.model_name]["size"][self.model_size]["embedding_size"]
+        emb_size = models[self.model_name]["embedding_size"]
         self.fc = nn.Linear(emb_size, 2)
 
     def forward(self, ids, mask):
