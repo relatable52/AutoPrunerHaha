@@ -36,8 +36,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TRAIN_PARAMS = {"batch_size": 100, "shuffle": True, "num_workers": 8}
 TEST_PARAMS = {"batch_size": 100, "shuffle": False, "num_workers": 8}
 
-logger = Logger()
-
 
 def train(dataloader, model, mean_loss, loss_fn, optimizer, cfx_matrix):
     model.train()
@@ -74,7 +72,7 @@ def train(dataloader, model, mean_loss, loss_fn, optimizer, cfx_matrix):
     return model, cfx_matrix, log_loss
 
 
-def do_test(dataloader, model, is_write=False):
+def do_test(dataloader, model, logger, is_write=False):
     model.eval()
     cfx_matrix = np.array([[0, 0], [0, 0]])
     result_per_programs = {}
@@ -156,6 +154,7 @@ def do_train(
     loss_fn,
     optimizer,
     learned_model_dir,
+    logger,
     loss_path,
 ):
     cfx_matrix = np.array([[0, 0], [0, 0]])
@@ -273,11 +272,12 @@ def main():
             loss_fn,
             optimizer,
             learned_model_dir,
+            logger,
             loss_path,
         )
     elif args.mode == "test":
         model.load_state_dict(os.path.join(learned_model_dir, "model.pth"))
-        do_test(test_loader, model, True)
+        do_test(test_loader, model, logger, True)
     else:
         raise NotImplemented
 

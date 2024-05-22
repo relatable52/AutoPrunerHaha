@@ -54,7 +54,7 @@ class CallGraphDataset(Dataset):
             }
 
     def process(self):
-        self.logger.info(f"Processing data using {self.model} model ...")
+        self.logger.info(f"Processing {self.mode} data using {self.model} model ...")
         self.data = []
         self.mask = []
         self.static_ids = []
@@ -62,7 +62,6 @@ class CallGraphDataset(Dataset):
         cnt = 0
         with open(self.program_lists, "r") as f:
             for line in f:
-                self.logger.info(cnt)
                 cnt += 1
                 filename = line.strip()
                 self.logger.info(f"[{cnt}] Processing {filename} ...")
