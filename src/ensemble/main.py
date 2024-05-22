@@ -25,6 +25,7 @@ def get_args():
 
     parser.add_argument("--model", type=str, default="codebert")
     parser.add_argument("--loss_fn", type=str, default="cross_entropy")
+    parser.add_argument("--ensemble", type=str, default="max")
     return parser.parse_args()
 
 
@@ -94,7 +95,7 @@ def do_test(logger, test_loader, model, test_g_loader, g_model, ensemble="max"):
         recalls.append(r)
         f1s.append(f1)
     logger.log(
-        "[EVAL-AVG] Precision {} ({}), Recall {}({}), F1 {}({})".format(
+        "[EVAL-AVG] Precision {} ({}), Recall {} ({}), F1 {} ({})".format(
             round(statistics.mean(precisions), 2),
             round(statistics.stdev(precisions), 2),
             round(statistics.mean(recalls), 2),
@@ -125,6 +126,6 @@ def main():
     g_model_checkpoint = os.path.join(config["GNN_MODEL_DIR"], "gnn_wala.pth")
     g_model.load_state_dict(torch.load(g_model_checkpoint))
 
-    do_test(logger, test_ft_loader, model, test_g_loader, g_model)
+    do_test(logger, test_ft_loader, model, test_g_loader, g_model, args.ensemble)
 if __name__ == "__main__":
     main()

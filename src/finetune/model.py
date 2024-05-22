@@ -1,115 +1,72 @@
-from transformers import AutoModel, T5EncoderModel, PLBartModel
 from torch import nn
-class BERT(nn.Module):
-    def __init__(self):
-        super(BERT, self).__init__()
-        self.bert_model = AutoModel.from_pretrained("microsoft/codebert-base")
-        self.out = nn.Linear(768, 2)
+from transformers import AutoModel, T5EncoderModel, PLBartModel
 
-    def forward(self,ids,mask):
-        _,emb = self.bert_model(ids,attention_mask=mask, return_dict=False)
-        out = self.out(emb)
+models = {
+    "codebert": {
+        "model": AutoModel,
+        "embedding_size": 768,
+        "max_length": 512,
+        "pretrained_name": {
+            "base": "microsoft/codebert-base",
+        },
+    },
+    "codet5": {
+        "model": T5EncoderModel,
+        "embedding_size": 768,
+        "max_length": 512,
+        "pretrained_name": {
+            "base": "Salesforce/codet5-base",
+            "large": "Salesforce/codet5-large",
+        },
+    },
+    "plbart": {
+        "model": PLBartModel,
+        "embedding_size": 768,
+        "max_length": 1024,
+        "pretrained_name": {
+            "base": "uclanlp/plbart-base",
+        },
+    },
+    "codet5p": {
+        "model": T5EncoderModel,
+        "embedding_size": 768,
+        "max_length": 512,
+        "pretrained_name": {
+            "base": "Salesforce/codet5p-110m-embedding",
+            "large": "Salesforce/codet5p-770m",
+        },
+    },
+    "codesage": {
+        "model": AutoModel,
+        "embedding_size": 1024,
+        "max_length": 2048,
+        "pretrained_name": {
+            "small": "microsoft/codesage-small",
+            "base": "microsoft/codesage-base",
+        },
+    },
+}
 
-        return out, emb
 
-
-class CodeT5Enc(nn.Module):
-    def __init__(self):
-        super(CodeT5Enc, self).__init__()
-        self.codet5_model = T5EncoderModel.from_pretrained("Salesforce/codet5-base")
-        self.out = nn.Linear(768, 2)
+class Embedding(nn.Module):
+    def __init__(self, model_name, model_size):
+        assert self.model_name not in models, f"Model name {self.model_name} not found"
+        assert (
+            self.embed_size not in models[self.model_name]["size"]
+        ), f"Model size {self.model_size} not found in {self.model_name}"
+        super(Embedding, self).__init__()
+        self.name = model_name
+        self.model_size = model_size
+        self.encoder = self.load_model()
+        emb_size = models[self.model_name]["size"][self.model_size]["embedding_size"]
+        self.fc = nn.Linear(emb_size, 2)
 
     def forward(self, ids, mask):
-        emb = self.codet5_model(input_ids=ids, attention_mask=mask, return_dict=False)[
-            0
-        ]
-        emb = emb[:, -1]
-        out = self.out(emb)
+        emb = self.encoder(ids, attention_mask=mask, return_dict=False)[0][:, 0, :]
+        out = self.fc(emb)
         return out, emb
 
-
-class CodeT5pEnc(nn.Module):
-    def __init__(self):
-        super(CodeT5pEnc, self).__init__()
-        self.codet5p_model = T5EncoderModel.from_pretrained("Salesforce/codet5p-770m")
-        self.out = nn.Linear(1024, 2)
-
-    def forward(self, ids, mask):
-        emb = self.codet5p_model(input_ids=ids, attention_mask=mask, return_dict=False)[
-            0
-        ]
-        emb = emb[:, -1]
-        out = self.out(emb)
-        return out, emb
-
-
-class CodeT5pEmb(nn.Module):
-    def __init__(self):
-        super(CodeT5pEmb, self).__init__()
-        self.codet5p_emb_model = AutoModel.from_pretrained(
-            "Salesforce/codet5p-110m-embedding", trust_remote_code=True
+    def load_model(self):
+        return models[self.model_name]["model"].from_pretrained(
+            models[self.model_name]["size"][self.model_size]["pretrained_name"]
         )
-        self.out = nn.Linear(256, 2)
-
-    def forward(self, ids, mask):
-        emb = self.codet5p_emb_model(input_ids=ids, attention_mask=mask)
-        out = self.out(emb)
-        return out, emb
-
-
-class CodeSageBase(nn.Module):
-    def __init__(self):
-        super(CodeSageBase, self).__init__()
-        self.codesage_model = AutoModel.from_pretrained(
-            "codesage/codesage-small", trust_remote_code=True
-        )
-        self.out = nn.Linear(1024, 2)
-
-    def forward(self, ids, mask):
-        emb = self.codesage_model(
-            input_ids=ids, attention_mask=mask, return_dict=False
-        )[1]
-        out = self.out(emb)
-        return out, emb
-
-class PLBart(nn.Module):
-    def __init__(self):
-        super(PLBart, self).__init__()
-        self.plbart_model = PLBartModel.from_pretrained("uclanlp/plbart-base")
-        self.out = nn.Linear(768, 2)
-
-    def forward(self, ids, mask):
-        emb = self.plbart_model(input_ids = ids, attention_mask=mask)[0]
-        emb = emb[:, -1]
-        out = self.out(emb)
-        return out, emb
-
-
-def get_model(model_name):
-    models_dict = {
-        "codebert": BERT,
-        "codet5-base": CodeT5Enc,
-        "codet5p-770m": CodeT5pEnc,
-        "codet5p-110m-embedding": CodeT5pEmb,
-        "codesage": CodeSageBase,
-        "plbart": PLBart
-    }
-    if model_name in models_dict:
-        model = models_dict[model_name]()
-    else:
-        return NotImplemented
-    return model
-
-def get_emb_size(model_name):
-    emb_size_dict = {
-        "codebert": 768,
-        "codet5-base": 768,
-        "codet5p-770m": 1024,
-        "codet5p-110m-embedding": 256,
-        "codesage": 1024,
-        "plbart": 768
-    }
-    if model_name in emb_size_dict:
-        emb_size = emb_size_dict[model_name]
-        return emb_size
-    raise NotImplemented

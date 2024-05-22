@@ -6,36 +6,49 @@ from argparse import ArgumentParser
 from torch.utils.data import DataLoader
 from torch import nn
 from src.finetune.dataset import CallGraphDataset
-from src.utils.utils import read_config_file
-from src.finetune.model import get_model
+from src.utils.utils import read_config_file, Logger
+from src.finetune.model import EmbeddingModel
 
-PARAMS = {"batch_size": 10, "shuffle": False, "num_workers": 8}
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def save_finetune(config, mode, model_name, loss_fn):
+
+def save_finetune(config, mode, model_name, model_size, loss_fn, logger, batch_size=10):
+    PARAMS = {"batch_size": batch_size, "shuffle": False, "num_workers": 8}
     dataset = CallGraphDataset(config, mode, model_name)
     dataloader = DataLoader(dataset, **PARAMS)
     model_path = os.path.join(
-        config["LEARNED_MODEL_DIR"], model_name, loss_fn, "model.pth"
+        config["LEARNED_MODEL_DIR"],
+        f"{model_name}-{model_size}",
+        loss_fn,
     )
+    with open(
+        os.path.join(model_path, "best_model.txt"),
+        "r",
+    ) as f:
+        best_model = f.read().strip()
+    model_path = os.path.join(model_path, best_model)
     save_dir = os.path.join(
-        config["CACHE_DIR"], model_name, loss_fn, "{}_finetuned".format(mode)
+        config["CACHE_DIR"],
+        model_name,
+        model_size,
+        loss_fn,
+        "{}_finetuned_{}".format(mode),
     )
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     if len(os.listdir(save_dir)) > 0:
-        print("Directory {} already exists".format(save_dir))
+        logger.info("Directory {} already exists".format(save_dir))
         return
 
-    model = get_model(model_name=model_name)
+    model = EmbeddingModel(model_name, model_size)
 
     if torch.cuda.device_count() > 1:
-        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-    model.to(device)
     checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint)
+    model.load_state_dict(checkpoint["model"])
+    model.to(device)
     loop = tqdm(enumerate(dataloader), leave=False, total=len(dataloader))
     for idx, batch in loop:
         ids = batch["ids"].to(device)
@@ -45,18 +58,31 @@ def save_finetune(config, mode, model_name, loss_fn):
         save_path = os.path.join(save_dir, "{}.npy".format(idx))
         np.save(save_path, emb)
 
+
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument("--config_path", type=str, default="config/wala.config", required=True)
+    parser.add_argument(
+        "--config_path", type=str, default="config/wala.config", required=True
+    )
     parser.add_argument("--model_name", type=str, default="codebert", required=True)
+    parser.add_argument("--model_size", type=str, default="base", required=True)
     parser.add_argument("--loss_fn", type=str, default="cross_entropy", required=True)
+    parser.add_argument("--batch_size", type=int, default=10)
+    parser.add_argument("--mode", type=str, default="train")
+    parser.add_argument("--log_dir", type=str, default="logs")
     return parser.parse_args()
+
 
 def main():
     args = get_args()
     config = read_config_file(args.config_path)
-    save_finetune(config, "train", args.model_name, args.loss_fn)
-    save_finetune(config, "test", args.model_name, args.loss_fn)
-    
+    log_path = os.path.join(args.log_dir, "save_finetune")
+    if not os.path.exists(log_path):
+        os.makedirs(log_path)
+    log_path = os.path.join(log_path, "save_finetune_{}_{}.log".format(args.model_name, args.mode))
+    logger = Logger(log_path)
+    save_finetune(config, args.mode, args.model_name, args.loss_fn, logger, args.batch_size)
+
+
 if __name__ == "__main__":
     main()

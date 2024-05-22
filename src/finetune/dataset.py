@@ -1,50 +1,27 @@
-from src.utils.utils import get_input_and_mask
+from src.utils.utils import get_input_and_mask, load_code
+from src.utils.converter import convert
+from src.finetune.model import models
 import torch
-from torch.utils.data import Dataset
 import os
 import pandas as pd
+from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 from dgl.data.utils import save_info, load_info
 from tqdm import tqdm
-from src.utils.utils import read_config_file, load_code, get_input_and_mask
-from src.utils.converter import convert
-from torch.utils.data import DataLoader
-from src.finetune.model import BERT
-import numpy as np
-from torch import nn
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-PARAMS = {'batch_size': 10, 'shuffle': False, 'num_workers': 8}
-models_dict = {
-    "codebert": "microsoft/codebert-base",
-    "codet5-base": "Salesforce/codet5-base",
-    "codet5p-770m": "Salesforce/codet5p-770m",
-    "codet5p-110m-embedding": "Salesforce/codet5p-110m-embedding",
-    "codesage": "codesage/codesage-small",
-    "plbart": "uclanlp/plbart-base"
-}
-
-# max_length_dict = {
-#     "codebert": 512,
-#     "codet5-base": 512,
-#     "codet5p-770m": 512,
-#     "codet5p-110m-embedding": 512,
-#     "codesage": 512,
-#     "plbart": 512,
-# }
 
 class CallGraphDataset(Dataset):
-    def __init__(self, config, mode, model_name):
+    def __init__(self, config, mode, model_name, logger):
         self.mode = mode
-        self.train_mode = mode
+        self.model_name = model_name
         self.config = config
+        self.logger = logger
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
         self.save_dir = os.path.join(self.config["CACHE_DIR"], model_name)
         self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
 
-        self.max_length = 512
+        self.max_length = models[model_name]["max_length"]
 
         if self.mode == "train":
             self.program_lists = os.path.join(self.config["TRAINING_PROGRAMS_LIST"])
@@ -53,11 +30,10 @@ class CallGraphDataset(Dataset):
         else:
             return NotImplemented
 
-        # print(self.has_cache())
         if self.has_cache():
             self.load()
-        elif model_name in models_dict:
-            self.tokenizer = AutoTokenizer.from_pretrained(models_dict[model_name])
+        elif model_name in models:
+            self.tokenizer = AutoTokenizer.from_pretrained(models[model_name]["pretrained_name"])
             self.process()
             self.save()
         else:
@@ -77,6 +53,7 @@ class CallGraphDataset(Dataset):
             }
 
     def process(self):
+        self.logger.info(f"Processing data using {self.model_name} model ...")
         self.data = []
         self.mask = []
         self.static_ids = []
@@ -84,9 +61,10 @@ class CallGraphDataset(Dataset):
         cnt = 0
         with open(self.program_lists, "r") as f:
             for line in f:
-                print(cnt)
+                self.logger.info(cnt)
                 cnt += 1
                 filename = line.strip()
+                self.logger.info(f"[{cnt}/{len(f)}] Processing {filename} ...")
                 file_path = os.path.join(self.raw_data_path, filename, self.cg_file)
                 df = pd.read_csv(file_path)
                 for i in tqdm(range(len(df['wiretap']))):
@@ -125,7 +103,7 @@ class CallGraphDataset(Dataset):
                   )
 
     def load(self):
-        print("Loading data ...")
+        self.logger.info(f"Loading data from {self.save_path} ...")
         info_dict = load_info(self.save_path)
         self.labels = info_dict['label']
         self.data = info_dict['data']
@@ -134,7 +112,6 @@ class CallGraphDataset(Dataset):
 
     def has_cache(self):
         if os.path.exists(self.save_path):
-            print("Data exists")
             return True
         return False
 
