@@ -64,7 +64,7 @@ models = {
 
 
 class EmbeddingModel(nn.Module):
-    def __init__(self, model_name, model_size):
+    def __init__(self, model_name):
         assert model_name in models, f"Model name {model_name} not found"
         super(EmbeddingModel, self).__init__()
         self.model_name = model_name
