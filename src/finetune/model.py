@@ -64,7 +64,7 @@ class EmbeddingModel(nn.Module):
         self.fc = nn.Linear(emb_size, 2)
 
     def forward(self, ids, mask):
-        emb = self.encoder(ids, attention_mask=mask, return_dict=False)[0][:, 0, :]
+        emb = self.encoder(ids, attention_mask=mask, return_dict=False)[0][:, 0]
         out = self.fc(emb)
         return out, emb
 
