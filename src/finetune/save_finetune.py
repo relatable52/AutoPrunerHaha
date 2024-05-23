@@ -13,6 +13,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def save_finetune(config, mode, model_name, loss_fn, logger, batch_size=10):
+    logger.info(f"Saving finetuned embeddings for {model_name} model")
     PARAMS = {"batch_size": batch_size, "shuffle": False, "num_workers": 8}
     dataset = CallGraphDataset(config, mode, model_name, logger)
     dataloader = DataLoader(dataset, **PARAMS)
@@ -76,9 +77,10 @@ def main():
     log_path = os.path.join(args.log_dir, "save_finetune")
     if not os.path.exists(log_path):
         os.makedirs(log_path)
-    log_path = os.path.join(log_path, "save_finetune_{}_{}.log".format(args.model, args.mode))
+    log_path = os.path.join(log_path, "save_finetune_{}.log".format(args.model, args.mode))
     logger = Logger(log_path)
-    save_finetune(config, args.mode, args.model, args.loss_fn, logger, args.batch_size)
+    save_finetune(config, "train", args.model, args.loss_fn, logger, args.batch_size)
+    save_finetune(config, "test", args.model, args.loss_fn, logger, args.batch_size)
 
 
 if __name__ == "__main__":

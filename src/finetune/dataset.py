@@ -12,7 +12,6 @@ from tqdm import tqdm
 class CallGraphDataset(Dataset):
     def __init__(self, config, mode, model, logger):
         self.mode = mode
-        model_name, _ = model.split("-")
         self.model = model
         self.config = config
         self.logger = logger
@@ -33,7 +32,7 @@ class CallGraphDataset(Dataset):
 
         if self.has_cache():
             self.load()
-        elif model_name in models:
+        elif model in models:
             self.tokenizer = AutoTokenizer.from_pretrained(models[model]["pretrained_name"])
             self.process()
             self.save()

@@ -1,5 +1,5 @@
 from torch import nn
-from transformers import AutoModel, T5EncoderModel, PLBartModel
+from transformers import AutoModel, T5EncoderModel, PLBartModel, AutoTokenizer
 
 models = {
     "codebert-base": {
@@ -12,13 +12,13 @@ models = {
         "model": T5EncoderModel,
         "max_length": 512,
         "embedding_size": 768,
-        "pretrained_name": "microsoft/codet5-base",
+        "pretrained_name": "Salesforce/codet5-base",
     },
     "codet5-large": {
         "model": T5EncoderModel,
         "max_length": 512,
-        "embedding_size": 768,
-        "pretrained_name": "microsoft/codet5-large",
+        "embedding_size": 1024,
+        "pretrained_name": "Salesforce/codet5-large",
     },
     "plbart-base": {
         "model": PLBartModel,
@@ -33,7 +33,7 @@ models = {
         "pretrained_name": "uclanlp/plbart-large",
     },
     "codet5p-base": {
-        "model": T5EncoderModel,
+        "model": AutoModel,
         "max_length": 512,
         "embedding_size": 256,
         "pretrained_name": "Salesforce/codet5p-110m-embedding",
@@ -42,9 +42,8 @@ models = {
     "codet5p-large": {
         "model": T5EncoderModel,
         "max_length": 512,
-        "embedding_size": 768,
+        "embedding_size": 1024,
         "pretrained_name": "Salesforce/codet5p-770m",
-        "trust_remote_code": True,
     },
     "codesage-base": {
         "model": AutoModel,
@@ -59,7 +58,14 @@ models = {
         "embedding_size": 1024,
         "pretrained_name": "codesage/codesage-small",
         "trust_remote_code": True,
-    }
+    },
+    "codesage-large": {
+        "model": AutoModel,
+        "max_length": 2048,
+        "embedding_size": 2048,
+        "pretrained_name": "codesage/codesage-large",
+        "trust_remote_code": True,
+    },
 }
 
 
@@ -73,19 +79,23 @@ class EmbeddingModel(nn.Module):
         self.fc = nn.Linear(emb_size, 2)
 
     def forward(self, ids, mask):
-        if self.model_name == "codet5p-base":
-            emb = self.encoder(ids, attention_mask=mask)
-        else:
-            emb = self.encoder(ids, attention_mask=mask, return_dict=False)[0][:, 0]
+        kwargs = {
+            "input_ids": ids,
+            "attention_mask": mask,
+        }
+        if self.model_name != "codet5p-base":
+            kwargs["return_dict"] = False
+        emb = self.encoder(**kwargs)
+        if self.model_name != "codet5p-base":
+            emb = emb[0][:, 0]
         out = self.fc(emb)
         return out, emb
 
     def load_model(self):
+        kwargs = {
+            "pretrained_model_name_or_path": models[self.model_name]["pretrained_name"]
+        }
+
         if "trust_remote_code" in models[self.model_name]:
-            return models[self.model_name]["model"].from_pretrained(
-                models[self.model_name]["pretrained_name"],
-                trust_remote_code=True,
-            )
-        return models[self.model_name]["model"].from_pretrained(
-            models[self.model_name]["pretrained_name"]
-        )
+            kwargs["trust_remote_code"] = True
+        return models[self.model_name]["model"].from_pretrained(**kwargs)
