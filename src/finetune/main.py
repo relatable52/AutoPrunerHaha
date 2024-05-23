@@ -141,7 +141,7 @@ def do_train(
         logs_loss[epoch] = log_loss
 
         logger.info("Evaluating ...")
-        _, _, f1 = do_test(test_loader, model)
+        _, _, f1 = do_test(test_loader, model, logger)
         if f1 > max_f1:
             max_f1 = f1
             logger.info("Saving best model ...")

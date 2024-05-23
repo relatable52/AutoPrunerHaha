@@ -175,7 +175,7 @@ def do_train(
         )
 
         logger.info("Evaluating ...")
-        f1 = do_test(test_loader, model, False)
+        f1 = do_test(test_loader, model, logger, False)
         if f1 > max_f1:
             max_f1 = f1
             logger.info("Saving best model ...")
@@ -213,7 +213,6 @@ def main():
     logger.info("Mode: {}".format(args.mode))
 
     mode = args.mode
-    model_name, model_size = args.model.split("-")
 
     learned_model_dir = config["CLASSIFIER_MODEL_DIR"]
     learned_model_dir = os.path.join(learned_model_dir, args.model, args.loss_fn)
@@ -237,10 +236,10 @@ def main():
     test_loader = DataLoader(test_dataset, **TEST_PARAMS)
 
     if args.feature == 2:
-        input_size = models[model_name]["embedding_size"]
+        input_size = models[args.model]["embedding_size"]
         model = NNClassifier_Combine(input_size=input_size, hidden_size=32)
     elif args.feature == 1:
-        input_size = models[model_name]["embedding_size"]
+        input_size = models[args.model]["embedding_size"]
         model = NNClassifier_Semantic(input_size=input_size, hidden_size=32)
     elif args.feature == 0:
         model = NNClassifier_Structure(32)
