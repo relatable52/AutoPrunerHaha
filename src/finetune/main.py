@@ -192,7 +192,6 @@ def main():
     logger.info("Mode: {}".format(args.mode))
 
     # Dataset
-    model_name, model_size = args.model.split("-")
     train_dataset = CallGraphDataset(config, "train", args.model, logger)
     test_dataset = CallGraphDataset(config, "test", args.model, logger)
 
@@ -216,7 +215,7 @@ def main():
     test_loader = DataLoader(test_dataset, **TEST_PARAMS)
 
     # Model, loss function, optimizer
-    model = EmbeddingModel(model_name, model_size)
+    model = EmbeddingModel(args.model)
 
     if torch.cuda.device_count() > 1:
         logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
