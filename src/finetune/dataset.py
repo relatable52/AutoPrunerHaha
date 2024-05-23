@@ -12,7 +12,7 @@ from tqdm import tqdm
 class CallGraphDataset(Dataset):
     def __init__(self, config, mode, model, logger):
         self.mode = mode
-        model_name, model_size = model.split("-")
+        model_name, _ = model.split("-")
         self.model = model
         self.config = config
         self.logger = logger
@@ -22,7 +22,7 @@ class CallGraphDataset(Dataset):
         self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
 
-        self.max_length = models[model_name]["max_length"]
+        self.max_length = models[model]["max_length"]
 
         if self.mode == "train":
             self.program_lists = os.path.join(self.config["TRAINING_PROGRAMS_LIST"])
@@ -34,7 +34,7 @@ class CallGraphDataset(Dataset):
         if self.has_cache():
             self.load()
         elif model_name in models:
-            self.tokenizer = AutoTokenizer.from_pretrained(models[model_name]["pretrained_name"][model_size])
+            self.tokenizer = AutoTokenizer.from_pretrained(models[model]["pretrained_name"])
             self.process()
             self.save()
         else:

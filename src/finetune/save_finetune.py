@@ -39,8 +39,7 @@ def save_finetune(config, mode, model_name, loss_fn, logger, batch_size=10):
     if len(os.listdir(save_dir)) > 0:
         logger.info("Directory {} already exists".format(save_dir))
         return
-    model_name, model_size = model_name.split("-")
-    model = EmbeddingModel(model_name, model_size)
+    model = EmbeddingModel(model_name)
 
     if torch.cuda.device_count() > 1:
         logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
@@ -77,7 +76,7 @@ def main():
     log_path = os.path.join(args.log_dir, "save_finetune")
     if not os.path.exists(log_path):
         os.makedirs(log_path)
-    log_path = os.path.join(log_path, "save_finetune_{}_{}.log".format(args.model_name, args.mode))
+    log_path = os.path.join(log_path, "save_finetune_{}_{}.log".format(args.model, args.mode))
     logger = Logger(log_path)
     save_finetune(config, args.mode, args.model, args.loss_fn, logger, args.batch_size)
 
