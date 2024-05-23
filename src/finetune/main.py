@@ -33,7 +33,7 @@ def train(dataloader, model, mean_loss, loss_fn, optimizer, cfx_matrix):
         code_ids = batch["ids"].to(device)
         mask = batch["mask"].to(device)
         label = batch["label"].to(device)
-        output, _ = model(ids=code_ids, mask=mask)
+        output, _ = model(code_ids, mask)
 
         loss = loss_fn(output, label)
 
@@ -66,7 +66,7 @@ def do_test(dataloader, model, logger):
         ids = dl["ids"].to(device)
         mask = dl["mask"].to(device)
         label = dl["label"].to(device)
-        output, _ = model(ids=ids, mask=mask)
+        output, _ = model(ids, mask)
 
         output = F.softmax(output)
         output = output.detach().cpu().numpy()[:, 1]
