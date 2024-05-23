@@ -122,13 +122,16 @@ def do_train(
     mean_loss = AverageMeter()
     max_f1 = 0.0
     logs_loss = load_json(loss_path)
-    checkpoint, last_epoch = find_checkpoint(learned_model_dir)
-    if last_epoch == epochs - 1:
-        logger.info("Model has already been trained for {} epochs".format(epochs))
-        return
+    last_epoch = -1
+    checkpoint = find_checkpoint(learned_model_dir)
     if checkpoint is not None:
+        checkpoint, last_epoch = checkpoint
         logger.info("Loaded checkpoint from {}".format(checkpoint))
         model, optimizer, max_f1 = load_checkpoint(checkpoint, model, optimizer)
+        
+        if last_epoch == epochs - 1:
+            logger.info("Model has already been trained for {} epochs".format(epochs))
+            return
     model.to(device)
     for epoch in range(last_epoch + 1, epochs):
         logger.info("Training at epoch {} ...".format(epoch))
