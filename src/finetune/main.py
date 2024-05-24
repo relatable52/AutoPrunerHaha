@@ -157,7 +157,7 @@ def do_train(
             state,
             os.path.join(learned_model_dir, "model_epoch_{}.pth".format(epoch)),
         )
-    save_json()
+        save_json(logs_loss, loss_path)
     logger.info("Finish training !!!")
 
 
