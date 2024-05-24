@@ -124,13 +124,12 @@ def do_train(
     checkpoint = find_checkpoint(learned_model_dir)
     if checkpoint is not None:
         checkpoint, last_epoch = checkpoint
-        logger.info("Loaded checkpoint from {}".format(checkpoint))
-        model, optimizer, max_f1 = load_checkpoint(checkpoint, model, optimizer)
-        
         if last_epoch == epochs - 1:
             logger.info("Model has already been trained for {} epochs".format(epochs))
             return
-    model.to(device)
+        logger.info("Loaded checkpoint from {}".format(checkpoint))
+        model, optimizer, max_f1 = load_checkpoint(checkpoint, model, optimizer)
+        
     for epoch in range(last_epoch + 1, epochs):
         logger.info("Training at epoch {} ...".format(epoch))
         model, cfx_matrix, log_loss = train(
@@ -219,6 +218,7 @@ def main():
         logger.info("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
 
+    model.to(device)
     loss_fn = get_loss_fn(args.loss_fn)
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 

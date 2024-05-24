@@ -14,7 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def save_finetune(config, mode, model_name, loss_fn, logger, batch_size=10):
     logger.info(f"Saving finetuned embeddings for {model_name} model")
-    PARAMS = {"batch_size": batch_size, "shuffle": False, "num_workers": 8}
+    PARAMS = {"batch_size": batch_size, "shuffle": False, "num_workers": 4}
     dataset = CallGraphDataset(config, mode, model_name, logger)
     dataloader = DataLoader(dataset, **PARAMS)
     model_path = os.path.join(
