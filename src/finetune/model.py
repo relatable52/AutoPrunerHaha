@@ -28,7 +28,7 @@ models = {
     },
     "plbart-large": {
         "model": PLBartModel,
-        "max_length": 1024,
+        "max_length": 512,
         "embedding_size": 1024,
         "pretrained_name": "uclanlp/plbart-large",
     },
@@ -47,21 +47,21 @@ models = {
     },
     "codesage-base": {
         "model": AutoModel,
-        "max_length": 2048,
+        "max_length": 512,
         "embedding_size": 1024,
         "pretrained_name": "codesage/codesage-base",
         "trust_remote_code": True,
     },
     "codesage-small": {
         "model": AutoModel,
-        "max_length": 2048,
+        "max_length": 512,
         "embedding_size": 1024,
         "pretrained_name": "codesage/codesage-small",
         "trust_remote_code": True,
     },
     "codesage-large": {
         "model": AutoModel,
-        "max_length": 2048,
+        "max_length": 512,
         "embedding_size": 2048,
         "pretrained_name": "codesage/codesage-large",
         "trust_remote_code": True,
