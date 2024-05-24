@@ -93,9 +93,7 @@ def find_checkpoint(learned_model_dir):
     if len(checkpoint_files) == 0:
         return
     lastest_epoch = max([int(f.split("_")[-1].split(".")[0]) for f in checkpoint_files])
-    checkpoint = torch.load(
-        os.path.join(learned_model_dir, "model_epoch_{}.pth".format(lastest_epoch))
-    )
+    checkpoint = os.path.join(learned_model_dir, "model_epoch_{}.pth".format(lastest_epoch))
     return checkpoint, lastest_epoch
 
 
