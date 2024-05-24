@@ -98,9 +98,9 @@ def find_checkpoint(learned_model_dir):
 
 
 def load_checkpoint(path, model, optimizer):
-    checkpoint = torch.load(path)
+    checkpoint = torch.load(path, map_location=device)
     model.load_state_dict(checkpoint["model"])
-    optimizer.load_state_dict(checkpoint["optimizer"], map_location="gpu")
+    optimizer.load_state_dict(checkpoint["optimizer"])
     f1 = checkpoint["max_f1"]
     return model, optimizer, f1
 
