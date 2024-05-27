@@ -3,6 +3,8 @@ import logging
 import os
 from sklearn.metrics import confusion_matrix
 import math
+import json
+
 def read_config_file(config_file):
     configs = {}
     with open(config_file) as f:
@@ -66,18 +68,51 @@ def load_code(path):
     return data
 
 
-class Logger(object):
-    def __init__(self, log_dir= "output"):
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
-        log_path = os.path.join(log_dir, "log.txt")
-        if os.path.exists(log_path):
-            os.remove(log_path)
-        logging.basicConfig(filename= log_path, level=logging.INFO)
+import logging
 
-    def log(self, content):
-        logging.info(content)
-        print(content)
+
+class Logger:
+    def __init__(
+        self, log_file, log_level=logging.INFO, console=True, file_mode="w", time=True
+    ):
+        self.logger = logging.getLogger()
+        self.logger.setLevel(log_level)
+
+        if time:
+            formatter = logging.Formatter(
+                "[%(asctime)s] - [%(levelname)s]: %(message)s"
+            )
+        else:
+            formatter = logging.Formatter("[%(levelname)s]: %(message)s")
+
+        # Create a file handler
+        file_handler = logging.FileHandler(log_file, mode=file_mode)
+        file_handler.setLevel(log_level)
+        file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+
+        # Create a console handler
+        if console:
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(log_level)
+            console_handler.setFormatter(formatter)
+            self.logger.addHandler(console_handler)
+
+    def log(self, message, level=logging.INFO):
+        self.logger.log(level, message)
+
+    def info(self, message):
+        self.logger.info(message)
+
+    def warning(self, message):
+        self.logger.warning(message)
+
+    def error(self, message):
+        self.logger.error(message)
+
+    def critical(self, message):
+        self.logger.critical(message)
+
 
 class AverageMeter(object):
     '''Computes and stores the average and current value'''
@@ -116,3 +151,12 @@ def evaluation_metrics(label, pred, cfx_matrix):
     f1 = 2*precision*recall/(precision + recall)
     return cfx_matrix, precision, recall, f1
 
+def load_json(file):
+    if os.path.exists(file):
+        with open(file, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_json(data, file):
+    with open(file, "w") as f:
+        json.dump(data, f)
