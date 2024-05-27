@@ -1,7 +1,6 @@
-from transformers import AutoModel, T5EncoderModel
+from transformers import AutoModel, T5EncoderModel, PLBartModel
 from torch import nn
 class BERT(nn.Module):
-
     def __init__(self):
         super(BERT, self).__init__()
         self.bert_model = AutoModel.from_pretrained("microsoft/codebert-base")
@@ -70,7 +69,6 @@ class CodeSageBase(nn.Module):
         )[1]
         out = self.out(emb)
         return out, emb
-
 
 def get_model(model_name):
     models_dict = {
