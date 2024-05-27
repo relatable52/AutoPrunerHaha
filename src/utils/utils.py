@@ -16,19 +16,30 @@ def read_config_file(config_file):
 def get_input_and_mask(src, dst , max_length, tokenizer):
     src_tokens = tokenizer.tokenize(src)
     dst_tokens = tokenizer.tokenize(dst)
-    tokens=[tokenizer.bos_token]+src_tokens+[tokenizer.eos_token]+dst_tokens+[tokenizer.eos_token]
+    
+    has_cls_and_sep = ((tokenizer.cls_token is not None) and (tokenizer.sep_token is not None))
+    
+    if has_cls_and_sep:
+        tokens=[tokenizer.cls_token]+src_tokens+[tokenizer.sep_token]+dst_tokens+[tokenizer.sep_token]
+    else:
+        tokens = src_tokens + dst_tokens
+
     token_length = len(tokens)
     if  token_length > max_length:
         truncation_ratio = max_length/token_length
+        num_special_tokens = 3 if has_cls_and_sep else 0
         src_len = len(src_tokens)
         dst_len = len(dst_tokens)
         if  src_len < dst_len:
             src_tokens = src_tokens[:int(len(src_tokens) * truncation_ratio)]
-            dst_tokens = dst_tokens[:max_length - len(src_tokens) - 3]
+            dst_tokens = dst_tokens[:max_length - len(src_tokens) - num_special_tokens]
         else:
             dst_tokens = dst_tokens[:int(len(dst_tokens) * truncation_ratio)]
-            src_tokens = src_tokens[:max_length - len(dst_tokens) - 3]
-        new_tokens=[tokenizer.bos_token]+src_tokens+[tokenizer.eos_token]+dst_tokens+[tokenizer.eos_token]
+            src_tokens = src_tokens[:max_length - len(dst_tokens) - num_special_tokens]
+        if has_cls_and_sep:
+            new_tokens=[tokenizer.cls_token]+src_tokens+[tokenizer.sep_token]+dst_tokens+[tokenizer.sep_token]
+        else:
+            new_tokens=src_tokens+dst_tokens
         mask = [1 for _ in range(len(new_tokens))]
     else:
         new_tokens = [tokens[i] if i < token_length else tokenizer.pad_token for i in range(max_length)]

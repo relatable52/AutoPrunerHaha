@@ -157,7 +157,10 @@ def do_train(
         model, cfx_matrix = train(
             train_loader, model, mean_loss, loss_fn, optimizer, cfx_matrix
         )
-
+        
+        logger.log("Saving model ...")
+        torch.save(model.state_dict(), os.path.join(learned_model_dir, f"model_epoch{epoch}.pth"))
+        
         logger.log("Evaluating ...")
         do_test(test_loader, model, False)
 

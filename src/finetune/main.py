@@ -96,9 +96,6 @@ def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer, learn
     logger.log("Done !!!")
 
 
-
-
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default="codebert")
