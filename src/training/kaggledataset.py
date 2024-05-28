@@ -93,37 +93,11 @@ class FinetunedDataset(Dataset):
         }
 
     def process(self):
-        self.logger.info(f"Processing data for {self.mode}ing ...")
-        self.code_feats = []
-        self.struct_feats = []
-        self.labels = []
-        self.static_ids = []
-        self.program_ids = []
-        idx = 0
-        program_idx = 0
-        with open(self.program_lists, "r") as f:
-            for line in f:
-                filename = line.strip()
-                file_path = os.path.join(self.raw_data_path, filename, self.cg_file)
-                df = pd.read_csv(file_path)
-                features = df[self.header_names].to_numpy()
-                for i in tqdm(range(len(df["wiretap"]))):
-                    lb, sanity_check = df["wiretap"][i], df[self.config["SA_LABEL"]][i]
-                    if self.mode != "train" or sanity_check == 1:
-                        batch_idx = idx // self.batch_size
-                        in_batch_idx = idx % self.batch_size,
-                        emb_path = os.path.join(self.emd_dir, f"{batch_idx}.npy")
-                        self.code_feats.append(np.load(emb_path)[in_batch_idx])
-                        self.struct_feats.append(features[i])
-                        self.labels.append(lb)
-                        self.static_ids.append(sanity_check)
-                        self.program_ids.append(program_idx)
-                        idx += 1
-                program_idx += 1
-
-    def save(self):
         pass
     
+    def save(self):
+        pass
+
     def load(self):
         self.logger.info(f"Loading data from {self.save_path} ...")
         info_dict = pd.read_pickle(self.save_path)
