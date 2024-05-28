@@ -73,11 +73,7 @@ class FinetunedDataset(Dataset):
         struct_feats = np.where(
             self.struct_feats[index] == 1000000000, 100000, self.struct_feats[index]
         )
-        code = torch.tensor(self.code_feats[index], dtype=torch.float)
-        struct = torch.tensor(struct_feats, dtype=torch.float)
-        label = torch.tensor(self.labels[index], dtype=torch.long)
-        # data = torch.cat((code, struct), 0)
-        return code, label
+        return torch.tensor(self.code_feats[index], dtype=torch.float), torch.tensor(self.labels[index], dtype=torch.long)
 
     def process(self):
         pass
