@@ -76,7 +76,7 @@ class FinetunedDataset(Dataset):
         code = torch.tensor(self.code_feats[index], dtype=torch.float)
         struct = torch.tensor(struct_feats, dtype=torch.float)
         label = torch.tensor(self.labels[index], dtype=torch.long)
-        data = torch.cat([code, struct], axis=1)
+        data = torch.cat((code, struct), 0)
         return data, label
 
     def process(self):
