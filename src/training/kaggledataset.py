@@ -3,7 +3,6 @@ from torch.utils.data import Dataset
 import os
 import pandas as pd
 from transformers import AutoTokenizer
-from dgl.data.utils import save_info, load_info
 from tqdm import tqdm
 from src.utils.utils import read_config_file
 from src.utils.converter import convert
@@ -123,19 +122,8 @@ class FinetunedDataset(Dataset):
                 program_idx += 1
 
     def save(self):
-        if not os.path.exists(self.save_dir):
-            os.makedirs(self.save_dir)
-        save_info(
-            self.save_path,
-            {
-                "code": self.code_feats,
-                "struct": self.struct_feats,
-                "target": self.labels,
-                "static_ids": self.static_ids,
-                "program_ids": self.program_ids,
-            },
-        )
-
+        pass
+    
     def load(self):
         self.logger.info(f"Loading data from {self.save_path} ...")
         info_dict = pd.read_pickle(self.save_path)
