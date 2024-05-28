@@ -50,14 +50,7 @@ class FinetunedDataset(Dataset):
         )
         self.save_path = os.path.join(self.save_dir, f"ft_{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
-
-        dirs = [
-            d
-            for d in os.listdir(self.save_dir)
-            if os.path.isdir(os.path.join(self.save_dir, d))
-            and f"{self.mode}_finetuned" in d
-        ]
-        self.batch_size = max([int(d.split("_")[-1]) for d in dirs])
+        
         self.emd_dir = os.path.join(
             self.save_dir, f"{self.mode}_finetuned_{self.batch_size}"
         )
