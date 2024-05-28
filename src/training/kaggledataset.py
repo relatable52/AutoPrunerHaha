@@ -50,10 +50,6 @@ class FinetunedDataset(Dataset):
         )
         self.save_path = os.path.join(self.save_dir, f"ft_{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
-        
-        self.emd_dir = os.path.join(
-            self.save_dir, f"{self.mode}_finetuned_{self.batch_size}"
-        )
 
         if self.mode == "train":
             self.program_lists = os.path.join(self.config["TRAINING_PROGRAMS_LIST"])
