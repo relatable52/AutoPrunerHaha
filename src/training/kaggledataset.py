@@ -73,7 +73,7 @@ class FinetunedDataset(Dataset):
         struct_feats = np.where(
             self.struct_feats[index] == 1000000000, 100000, self.struct_feats[index]
         )
-        return struct_feats, self.code_feats[index]
+        return struct_feats
     
     def process(self):
         pass
