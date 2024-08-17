@@ -10,13 +10,14 @@ import argparse
 from src.utils.utils import Logger, AverageMeter, evaluation_metrics, read_config_file
 import os
 import warnings
+import wandb
 
 warnings.filterwarnings("ignore")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-TRAIN_PARAMS = {'batch_size': 8, 'shuffle': True, 'num_workers': 2}
-TEST_PARAMS = {'batch_size': 8, 'shuffle': False, 'num_workers': 2}
+TRAIN_PARAMS = {'batch_size': 4, 'shuffle': True, 'num_workers': 2}
+TEST_PARAMS = {'batch_size': 4, 'shuffle': False, 'num_workers': 2}
 
 logger = Logger()
 
@@ -133,6 +134,7 @@ def get_args():
     parser.add_argument("--model_name", type=str, default="codet5p-110m-embedding")
     parser.add_argument("--model_path", type=str, default="../replication_package/model/finetuned_model/model.pth", help="Path to checkpoint (for test only)") 
     parser.add_argument("--mode", type=str, default="train") 
+    parser.add_argument("--wandb_key", type=str, help="Required for training on Kaggle")
     
     return parser.parse_args()
 
@@ -163,22 +165,18 @@ def main():
     if(not os.path.exists(learned_model_dir)):
         os.makedirs(learned_model_dir)
 
+    model = get_model(model_name)
+
     if(args.config_path == "config/kaggle_finetune_wala.config"):
         from src.finetune.kaggle_dataset import KaggleCallGraphDataset
+        wandb_key = args.wandb_key
+        wandb.init(project='AutoPruner_finetuning', resume="allow", id=model_name)
         train_dataset= KaggleCallGraphDataset(config, "train", model_name)
         test_dataset= KaggleCallGraphDataset(config, "test", model_name)
         print("Dataset has {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
-        train_dataset1 =  Subset(train_dataset, range(0, len(train_dataset), 5))
-        train_dataset2 = Subset(train_dataset, range(1, len(train_dataset), 5))
-        train_dataset3 = Subset(train_dataset, range(2, len(train_dataset), 5))
-        train_dataset4 = Subset(train_dataset, range(3, len(train_dataset), 5))
-        train_dataset5 = Subset(train_dataset, range(4, len(train_dataset), 5))
-        print("5 subset, each has {}".format(len(train_dataset5)))
-        train_loader1 = DataLoader(train_dataset1, **TRAIN_PARAMS)
-        train_loader2 = DataLoader(train_dataset2, **TRAIN_PARAMS)
-        train_loader3 = DataLoader(train_dataset3, **TRAIN_PARAMS)
-        train_loader4 = DataLoader(train_dataset4, **TRAIN_PARAMS)
-        train_loader5 = DataLoader(train_dataset5, **TRAIN_PARAMS)
+        train_datasubsets = [Subset(train_dataset, range(i, len(train_dataset), 5)) for i in range(5)]
+        print("5 subset, each has {}".format(len(train_datasubsets[0])))
+        
         test_loader = DataLoader(test_dataset, **TEST_PARAMS)
     else:
         from src.finetune.dataset import CallGraphDataset
@@ -187,9 +185,6 @@ def main():
         print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
         train_loader = DataLoader(train_dataset, **TRAIN_PARAMS)
         test_loader = DataLoader(test_dataset, **TEST_PARAMS)
-
-
-    model = get_model(model_name)
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
@@ -202,7 +197,8 @@ def main():
     if mode == "train":
         do_train(1, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "train_kaggle":
-        do_train_kaggle(1, train_loader1, test_loader, model, loss_fn, optimizer, learned_model_dir, 1)
+        do_train_kaggle(1, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir, 1)
+
     elif mode == "test":
         model, optimizer = load_checkpoint(model, optimizer, args.model_path)
         do_test(test_loader, model)
