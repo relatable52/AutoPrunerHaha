@@ -16,7 +16,7 @@ def read_config_file(config_file):
 def get_input_and_mask(src, dst , max_length, tokenizer):
     src_tokens = tokenizer.tokenize(src)
     dst_tokens = tokenizer.tokenize(dst)
-    tokens=[tokenizer.cls_token]+src_tokens+[tokenizer.sep_token]+dst_tokens+[tokenizer.sep_token]
+    tokens=[tokenizer.bos_token]+src_tokens+[tokenizer.eos_token]+dst_tokens+[tokenizer.eos_token]
     token_length = len(tokens)
     if  token_length > max_length:
         truncation_ratio = max_length/token_length
@@ -28,7 +28,7 @@ def get_input_and_mask(src, dst , max_length, tokenizer):
         else:
             dst_tokens = dst_tokens[:int(len(dst_tokens) * truncation_ratio)]
             src_tokens = src_tokens[:max_length - len(dst_tokens) - 3]
-        new_tokens=[tokenizer.cls_token]+src_tokens+[tokenizer.sep_token]+dst_tokens+[tokenizer.sep_token]
+        new_tokens=[tokenizer.bos_token]+src_tokens+[tokenizer.eos_token]+dst_tokens+[tokenizer.eos_token]
         mask = [1 for _ in range(len(new_tokens))]
     else:
         new_tokens = [tokens[i] if i < token_length else tokenizer.pad_token for i in range(max_length)]

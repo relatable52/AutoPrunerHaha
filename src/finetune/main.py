@@ -16,8 +16,8 @@ warnings.filterwarnings("ignore")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-TRAIN_PARAMS = {'batch_size': 4, 'shuffle': True, 'num_workers': 2}
-TEST_PARAMS = {'batch_size': 4, 'shuffle': False, 'num_workers': 2}
+TRAIN_PARAMS = {'batch_size': 2, 'shuffle': True, 'num_workers': 2}
+TEST_PARAMS = {'batch_size': 2, 'shuffle': False, 'num_workers': 2}
 
 logger = Logger()
 
@@ -99,22 +99,6 @@ def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer, learn
     torch.save(state, os.path.join(learned_model_dir, "final_model.pth"))
     logger.log("Done !!!")
 
-def do_train_kaggle(epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir, data_subset):
-    cfx_matrix = np.array([[0, 0],
-                           [0, 0]])
-    mean_loss = AverageMeter()
-    for epoch in range(epochs):
-        logger.log("Start training at epoch {} ...".format(epoch))
-        model, cfx_matrix = train(train_loader, model, mean_loss, loss_fn, optimizer, cfx_matrix)
-        
-        logger.log("Saving model ...")
-        state = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'subset': data_subset}
-        torch.save(state, os.path.join(learned_model_dir, "model_epoch{}.pth".format(epoch)))
-    
-    state = {'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'subset': data_subset}
-    torch.save(state, os.path.join(learned_model_dir, "final_model.pth"))
-    logger.log("Done !!!")
-
 def load_checkpoint(model, optimizer, filename):
     if os.path.isfile(filename):
         print("=> loading checkpoint '{}'".format(filename))
@@ -174,9 +158,7 @@ def main():
         train_dataset= KaggleCallGraphDataset(config, "train", model_name)
         test_dataset= KaggleCallGraphDataset(config, "test", model_name)
         print("Dataset has {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
-        train_datasubsets = [Subset(train_dataset, range(i, len(train_dataset), 5)) for i in range(5)]
-        print("5 subset, each has {}".format(len(train_datasubsets[0])))
-        
+        train_loader = DataLoader(train_dataset, **TRAIN_PARAMS)
         test_loader = DataLoader(test_dataset, **TEST_PARAMS)
     else:
         from src.finetune.dataset import CallGraphDataset
@@ -196,9 +178,6 @@ def main():
 
     if mode == "train":
         do_train(1, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
-    elif mode == "train_kaggle":
-        do_train_kaggle(1, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir, 1)
-
     elif mode == "test":
         model, optimizer = load_checkpoint(model, optimizer, args.model_path)
         do_test(test_loader, model)
