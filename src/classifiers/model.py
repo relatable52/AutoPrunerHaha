@@ -91,9 +91,9 @@ class XGBChunkClassifier(BaseClassifier):
             self.booster = xgb.train(self.params, Xy_train, **train_config)
 
 
-    def predict(self, test_data: np.ndarray, test_labels: np.ndarray, batch_size: int, **kwargs):
+    def predict(self, test_data: np.ndarray, batch_size: int, **kwargs):
         with tempfile.TemporaryDirectory() as tmpdir:
-            test_files = self.make_batches(test_data, test_labels, batch_size, tmpdir)
+            test_files = self.make_batches(test_data, np.zeros(len(test_data)), batch_size, tmpdir)
             it_test = XGBIterator(test_files)
 
             missing = np.nan

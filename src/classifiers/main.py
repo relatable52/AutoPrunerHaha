@@ -83,10 +83,10 @@ def train_classifier(
     model.save(save_path)
     return model
 
-def evaluate(model, test_data: np.ndarray, test_labels: np.ndarray):
+def evaluate(model, test_data: np.ndarray, test_labels: np.ndarray, predict_config: dict = {}):
     rf = model
 
-    preds = rf.predict(test_data)
+    preds = rf.predict(test_data, **predict_config)
 
     if preds.shape[1] == 2:
         preds = preds[:, 1]
@@ -108,7 +108,7 @@ def evaluate(model, test_data: np.ndarray, test_labels: np.ndarray):
     print("f1 score: ", f1_score)
     print("f2 score: ", f2_score)
 
-def evaluateByProgram(model, test_split, threshold=0.5):
+def evaluateByProgram(model, test_split, threshold=0.5, predict_config: dict = {}):
     precision_avg = []
     recall_avg = []
     f1_avg = []
@@ -119,7 +119,7 @@ def evaluateByProgram(model, test_split, threshold=0.5):
         program_labels = np.array(test_split[pid]["labels"])
     
         # Predict probabilities for the positive class
-        output = model.predict(program_features)
+        output = model.predict(program_features, **predict_config)
         if output.shape[1] == 2:
             output = output[:, 1]
     
@@ -185,6 +185,8 @@ def main():
     with open(run_config, 'r') as f:
         run_config = json.load(f)
 
+    predict_config = run_config.get("predict_config", {})
+
     data_dir = config["CACHE_DIR"]
     train_data_path = os.path.join(data_dir, "ft_train.pkl")
     test_data_path = os.path.join(data_dir, "ft_test.pkl")
@@ -196,8 +198,8 @@ def main():
     if mode == "test" or mode == "both":
         test_data, test_labels, _ = get_data(test_data_path, data_features)
         test_split = get_data_by_id(test_data_path, data_features)
-        evaluate(model, test_data, test_labels)
-        evaluateByProgram(model, test_split)
+        evaluate(model, test_data, test_labels, predict_config)
+        evaluateByProgram(model, test_split, predict_config)
 
 if __name__ == "__main__":
     main()
