@@ -30,8 +30,8 @@ def get_data(pkl_file: str, mode: str):
     semantic_data = np.vstack(data["code"])
     structure_data = np.vstack(data["struct"])
     all_data = np.hstack([structure_data, semantic_data])
-    labels = np.vstack(data['target'])
-    ids = np.vstack(data['program_ids'])
+    labels = np.stack(data['target'])
+    ids = np.stack(data['program_ids'])
     if mode == "all":
         return all_data, labels, ids
     elif mode == "semantic":
