@@ -165,7 +165,7 @@ def save_predictions(
     
     model = model_dict[classifier_name](model_config)
     model.load(model_path)
-    predictions = model.predict(test_data, predict_config)
+    predictions = model.predict(test_data, **predict_config)
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)

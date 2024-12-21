@@ -46,8 +46,8 @@ class XGBoostClassifier(BaseClassifier):
     def train(self, train_data: np.ndarray, train_labels: np.ndarray, **kwargs):
         self.model.fit(train_data, train_labels)
     
-    def predict(self, test_data: np.ndarray, predict_config: dict, **kwargs):
-        return self.model.predict_proba(test_data, **predict_config)
+    def predict(self, test_data: np.ndarray, **kwargs):
+        return self.model.predict_proba(test_data, **kwargs)
     
     def save(self, path: str):
         self.model.save_model(path)
@@ -91,7 +91,7 @@ class XGBChunkClassifier(BaseClassifier):
             self.booster = xgb.train(self.params, Xy_train, **train_config)
 
 
-    def predict(self, test_data: np.ndarray, test_labels: np.ndarray, batch_size: int):
+    def predict(self, test_data: np.ndarray, test_labels: np.ndarray, batch_size: int, **kwargs):
         with tempfile.TemporaryDirectory() as tmpdir:
             test_files = self.make_batches(test_data, test_labels, batch_size, tmpdir)
             it_test = XGBIterator(test_files)
