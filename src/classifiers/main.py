@@ -20,7 +20,7 @@ def get_args():
     parser.add_argument("--classifier_name", required=True, type=str, default="rf", help="Name of the classifier to train")
     parser.add_argument("--mode", type=str, default="both", help="Mode: train, test or both")
     parser.add_argument("--data_features", type=str, default="all", help="Features to use: semantic, structure or all")
-    parser.add_argument("--run_config", type=str, default="config/run_config.json", help="Path to the model config file")
+    parser.add_argument("--run_config", required=True, type=str, default="config/run_config.json", help="Path to the model config file")
     return parser.parse_args()
 
 def get_data(pkl_file: str, mode: str):
@@ -198,3 +198,6 @@ def main():
         test_split = get_data_by_id(test_data_path, data_features)
         evaluate(model, test_data, test_labels)
         evaluateByProgram(model, test_split)
+
+if __name__ == "__main__":
+    main()
