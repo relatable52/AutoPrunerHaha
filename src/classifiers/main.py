@@ -3,7 +3,7 @@ import pickle as pkl
 import os
 import json
 
-from src.classifiers.classifiers import RFClassifier, XGBClassifier, XGBChunkClassifier
+from src.classifiers.model import RFClassifier, XGBClassifier, XGBChunkClassifier
 from src.utils import read_config_file
 
 import pandas as pd
