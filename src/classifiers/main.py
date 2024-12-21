@@ -3,7 +3,7 @@ import pickle as pkl
 import os
 import json
 
-from src.classifiers.model import RFClassifier, XGBClassifier, XGBChunkClassifier
+from src.classifiers.model import RFClassifier, XGBoostClassifier, XGBChunkClassifier
 from src.utils.utils import read_config_file
 
 import pandas as pd
@@ -54,7 +54,7 @@ def get_data_by_id(pkl_file: str, mode: str):
 
 model_dict = {
     "rf": RFClassifier,
-    "xgb": XGBClassifier,
+    "xgb": XGBoostClassifier,
     "xgb_chunk": XGBChunkClassifier
 }
 

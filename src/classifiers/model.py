@@ -39,7 +39,7 @@ class RFClassifier(BaseClassifier):
         with open(path, 'rb') as f:
             self.model = pkl.load(f)
 
-class XGBClassifier(BaseClassifier):
+class XGBoostClassifier(BaseClassifier):
     def __init__(self, model_config: dict, **kwargs):
         self.model = XGBClassifier(**model_config)
     
