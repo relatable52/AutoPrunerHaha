@@ -74,7 +74,7 @@ def train_classifier(
     train_config = run_config.get("train_config", {})
     
     model = model_dict[classifier_name](model_config)
-    model.train(train_data, train_labels, train_config)
+    model.train(train_data, train_labels, **train_config)
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
