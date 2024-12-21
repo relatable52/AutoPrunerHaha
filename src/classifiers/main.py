@@ -88,7 +88,7 @@ def evaluate(model, test_data: np.ndarray, test_labels: np.ndarray, predict_conf
 
     preds = rf.predict(test_data, **predict_config)
 
-    if preds.shape[1] == 2:
+    if len(preds.shape) == 2:
         preds = preds[:, 1]
 
     y_test = pd.Series(test_labels)
@@ -120,7 +120,7 @@ def evaluateByProgram(model, test_split, threshold=0.5, predict_config: dict = {
     
         # Predict probabilities for the positive class
         output = model.predict(program_features, **predict_config)
-        if output.shape[1] == 2:
+        if len(output.shape) == 2:
             output = output[:, 1]
     
         # Convert probabilities to binary predictions using threshold 0.5
