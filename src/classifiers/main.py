@@ -198,8 +198,8 @@ def main():
     if mode == "test" or mode == "both":
         test_data, test_labels, _ = get_data(test_data_path, data_features)
         test_split = get_data_by_id(test_data_path, data_features)
-        evaluate(model, test_data, test_labels, predict_config)
-        evaluateByProgram(model, test_split, predict_config)
+        evaluate(model, test_data, test_labels, predict_config=predict_config)
+        evaluateByProgram(model, test_split, predict_config=predict_config)
 
 if __name__ == "__main__":
     main()
