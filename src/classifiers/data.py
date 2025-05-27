@@ -28,7 +28,7 @@ models_dict = {
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", type=str, default="config/wala.config") 
-    parser.add_argument("--model_name", type=str, default="microsoft/codebert-base")
+    parser.add_argument("--model_name", type=str, default="codebert", choices=list(models_dict.keys()), help="Name of the model to use")
     parser.add_argument("--model_path", type=str)
     return parser.parse_args()
 
