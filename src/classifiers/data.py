@@ -52,7 +52,7 @@ class CallGraphDataset(Dataset):
         elif self.mode == "test":
             self.program_lists = os.path.join(self.config["TEST_PROGRAMS_LIST"])
         else:
-            return NotImplemented
+            raise NotImplementedError(f"Mode {self.mode} is not implemented")
 
         print(self.has_cache())
         if self.has_cache():
@@ -62,7 +62,7 @@ class CallGraphDataset(Dataset):
             self.process()
             self.save()
         else:
-            return NotImplemented
+            raise NotImplementedError(f"Model {self.model_name} is not implemented")
     
     def __len__(self):
         return len(self.data)
