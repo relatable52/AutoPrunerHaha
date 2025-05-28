@@ -215,7 +215,7 @@ class ClassifierDataset(Dataset):
         self.labels = []
         self.static_ids = []
         self.program_ids = []
-
+        program_idx = 0
         with open(self.program_lists, "r") as f:
             for line in f:
                 filename = line.strip()
