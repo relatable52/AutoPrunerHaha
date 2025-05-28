@@ -71,7 +71,7 @@ extension_dict = {
 def tune_model_with_optuna(classifier_name: str, X, y, run_config: dict):
     def rf_objective(trial):
         params = {
-            "n_estimators": trial.suggest_int("n_estimators", 100, 500),
+            "n_estimators": trial.suggest_int("n_estimators", 100, 1000),
             "max_depth": trial.suggest_int("max_depth", 5, 50),
             "min_samples_split": trial.suggest_int("min_samples_split", 2, 10),
             "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 10),
@@ -87,7 +87,7 @@ def tune_model_with_optuna(classifier_name: str, X, y, run_config: dict):
             "eval_metric": "logloss",
             "max_depth": trial.suggest_int("max_depth", 3, 15),
             "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3),
-            "n_estimators": trial.suggest_int("n_estimators", 100, 500),
+            "n_estimators": trial.suggest_int("n_estimators", 100, 1000),
             "subsample": trial.suggest_float("subsample", 0.5, 1.0),
             "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
             "reg_alpha": trial.suggest_float("reg_alpha", 0, 1),
@@ -229,6 +229,7 @@ def main():
     mode = args.mode
     data_features = args.data_features
     run_config = args.run_config
+    model_name = config.get("MODEL", None)
     
     with open(run_config, 'r') as f:
         run_config = json.load(f)
@@ -236,6 +237,8 @@ def main():
     predict_config = run_config.get("predict_config", {})
 
     data_dir = config["CACHE_DIR"]
+    if model_name is not None:
+        data_dir = os.path.join(data_dir, model_name)
     train_data_path = os.path.join(data_dir, "ft_train.pkl")
     test_data_path = os.path.join(data_dir, "ft_test.pkl")
     save_dir = config["CLASSIFIER_MODEL_DIR"]  
@@ -244,6 +247,12 @@ def main():
         train_data, train_labels, _ = get_data(train_data_path, data_features)
         model = train_classifier(classifier_name, train_data, train_labels, save_dir, run_config, data_features)
     if mode == "test" or mode == "both":
+        if mode == "test":
+            model = model_dict[classifier_name]()
+
+        model_path = os.path.join(save_dir, f"{classifier_name}_{data_features}.{extension_dict[classifier_name]}")
+        model.load(model_path)
+        
         test_data, test_labels, _ = get_data(test_data_path, data_features)
         test_split = get_data_by_id(test_data_path, data_features)
         evaluate(model, test_data, test_labels, predict_config=predict_config)
