@@ -6,7 +6,7 @@ import pandas as pd
 import pickle as pkl
 import argparse
 from transformers import AutoTokenizer
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from src.utils.utils import read_config_file, load_code, get_input_and_mask
 from src.utils.converter import convert
 from src.finetune.model import BERT
@@ -90,12 +90,11 @@ class CallGraphDataset(Dataset):
                 filename = line.strip()
                 file_path = os.path.join(self.raw_data_path, filename, self.cg_file)
                 df = pd.read_csv(file_path)
+                descriptor2code = load_code(os.path.join(self.processed_path, filename, 'code.csv'))
+
                 for i in tqdm(range(len(df['dynamic']))):
                     src, dst, lb, sanity_check = df['method'][i], df['target'][i], df['dynamic'][i], df[self.config["SA_LABEL"]][i]
-                    if self.mode != "train" or sanity_check == 1:
-
-                        descriptor2code = load_code(os.path.join(self.processed_path, filename, 'code.csv'))
-                        
+                    if self.mode != "train" or sanity_check == 1:                        
                         if src != '<boot>':
                             if src in descriptor2code:
                                 src = descriptor2code[src]
@@ -155,7 +154,7 @@ if __name__ == '__main__':
     dataloader = DataLoader(dataset, **PARAMS)
 
     print("Loading model...")
-    model = BERT(model_name=model_name)
+    model = BERT()
     checkpoint = torch.load(args.model_path, map_location=device)
 
     if 'state_dict' in checkpoint:
