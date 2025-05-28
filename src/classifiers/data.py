@@ -334,7 +334,7 @@ if __name__ == '__main__':
 
         print("All embeddings saved successfully.")
     
-    classifier_dataset = ClassifierDataset(config, "test", model_name)
+    classifier_dataset = ClassifierDataset(config, "test", model_name, skip_embedding=skip_embedding)
     print(f"Classifier dataset size: {len(classifier_dataset)}")
 
     print("Done!")
