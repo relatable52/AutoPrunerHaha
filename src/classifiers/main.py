@@ -98,9 +98,9 @@ def tune_model_with_optuna(classifier_name: str, X, y, run_config: dict):
 
     study = optuna.create_study(direction="maximize")
     if classifier_name == "rf":
-        study.optimize(rf_objective, n_trials=run_config.get("tune_trials", 25))
+        study.optimize(rf_objective, n_trials=run_config.get("tune_trials", 5))
     elif classifier_name == "xgb":
-        study.optimize(xgb_objective, n_trials=run_config.get("tune_trials", 25))
+        study.optimize(xgb_objective, n_trials=run_config.get("tune_trials", 5))
     else:
         raise ValueError(f"Tuning not supported for {classifier_name}")
 
