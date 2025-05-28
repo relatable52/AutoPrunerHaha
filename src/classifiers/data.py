@@ -189,6 +189,7 @@ class ClassifierDataset(Dataset):
             raise NotImplementedError(f"Mode {self.mode} is not implemented")
 
         print(self.has_cache())
+        print(self.skip_embedding)
         if self.has_cache():
             self.load()
         elif self.model_name in models_dict:
