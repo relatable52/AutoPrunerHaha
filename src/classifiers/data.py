@@ -157,13 +157,26 @@ if __name__ == '__main__':
     model = BERT()
     checkpoint = torch.load(args.model_path, map_location=device)
 
+    # Robust handling of possible DataParallel or plain checkpoints
     if 'state_dict' in checkpoint:
-        model.load_state_dict(checkpoint['state_dict'])
+        state_dict = checkpoint['state_dict']
     else:
-        model.load_state_dict(checkpoint)
+        state_dict = checkpoint
 
+    # Remove 'module.' prefix if present
+    new_state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+
+    # Optionally filter out keys not in model
+    model_keys = set(model.state_dict().keys())
+    filtered_state_dict = {k: v for k, v in new_state_dict.items() if k in model_keys}
+
+    # Load with strict=False to handle minor differences like position_ids
+    model.load_state_dict(filtered_state_dict, strict=False)
+
+    # Wrap with DataParallel if needed
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
+
     model.to(device)
     model.eval()
 
