@@ -55,6 +55,7 @@ def get_args():
     parser.add_argument("--config_path", type=str, default="config/wala.config") 
     parser.add_argument("--model_name", type=str, default="codebert", choices=list(models_dict.keys()), help="Name of the model to use")
     parser.add_argument("--model_path", type=str)
+    parser.add_argument("--skip_embedding", type=bool, default=False, help="Whether to skip embedding extraction")
     return parser.parse_args()
 
 class CallGraphDataset(Dataset):
@@ -168,7 +169,8 @@ class CallGraphDataset(Dataset):
 
 
 class ClassifierDataset(Dataset):
-    def __init__(self, config, mode, model_name):
+    def __init__(self, config, mode, model_name, skip_embedding=False):
+        self.skip_embedding = skip_embedding
         self.mode = mode
         self.config = config
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
@@ -222,7 +224,7 @@ class ClassifierDataset(Dataset):
                 file_path = os.path.join(self.raw_data_path, filename, self.cg_file)
                 df = pd.read_csv(file_path)
                 features = df[self.header_names].to_numpy()
-                emb = np.load(self.emb_file)
+                emb = np.load(self.emb_file) if not self.skip_embedding else np.zeros((len(df), 768))  # Assuming 768 is the embedding size
                 for i in tqdm(range(len(df['dynamic']))):
                     lb, sanity_check = df['dynamic'][i], df[self.config["SA_LABEL"]][i]
                     if self.mode != "train" or sanity_check == 1:
@@ -267,67 +269,69 @@ class ClassifierDataset(Dataset):
 if __name__ == '__main__':
     args = get_args()
     config = read_config_file(args.config_path)
+
+    skip_embedding = args.skip_embedding
     model_name = args.model_name
+    if not skip_embedding:
+        print("Loading dataset...")
+        dataset = CallGraphDataset(config, "test", model_name)
+        print(f"Dataset size: {len(dataset)}")
 
-    print("Loading dataset...")
-    dataset = CallGraphDataset(config, "test", model_name)
-    print(f"Dataset size: {len(dataset)}")
+        save_dir = os.path.join(config["CACHE_DIR"], f"{model_name}/")
+        os.makedirs(save_dir, exist_ok=True)
 
-    save_dir = os.path.join(config["CACHE_DIR"], f"{model_name}/")
-    os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, "test_embeddings.npy")
 
-    save_path = os.path.join(save_dir, "test_embeddings.npy")
+        if not os.path.exists(save_path):
+            dataloader = DataLoader(dataset, **PARAMS)
 
-    if not os.path.exists(save_path):
-        dataloader = DataLoader(dataset, **PARAMS)
+            print("Loading model...")
+            model = BERT()
+            checkpoint = torch.load(args.model_path, map_location=device)
 
-        print("Loading model...")
-        model = BERT()
-        checkpoint = torch.load(args.model_path, map_location=device)
+            # Robust handling of possible DataParallel or plain checkpoints
+            if 'state_dict' in checkpoint:
+                state_dict = checkpoint['state_dict']
+            else:
+                state_dict = checkpoint
 
-        # Robust handling of possible DataParallel or plain checkpoints
-        if 'state_dict' in checkpoint:
-            state_dict = checkpoint['state_dict']
+            # Remove 'module.' prefix if present
+            new_state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+
+            # Optionally filter out keys not in model
+            model_keys = set(model.state_dict().keys())
+            filtered_state_dict = {k: v for k, v in new_state_dict.items() if k in model_keys}
+
+            # Load with strict=False to handle minor differences like position_ids
+            model.load_state_dict(filtered_state_dict, strict=False)
+
+            # Wrap with DataParallel if needed
+            if torch.cuda.device_count() > 1:
+                model = nn.DataParallel(model)
+
+            model.to(device)
+            model.eval()
+
+            all_embeddings = []
+
+            print("Extracting embeddings...")
+            with torch.no_grad():
+                for batch in tqdm(dataloader):
+                    ids = batch['ids'].to(device)
+                    mask = batch['mask'].to(device)
+
+                    _, emb = model(ids=ids, mask=mask)
+                    all_embeddings.append(emb.detach().cpu().numpy())
+
+            print("Concatenating embeddings...")
+            all_embeddings = np.concatenate(all_embeddings, axis=0)
+
+            print(f"Saving all embeddings to {save_path}")
+            np.save(save_path, all_embeddings)
         else:
-            state_dict = checkpoint
+            print(f"Embeddings already exist at {save_path}, skipping extraction.")
 
-        # Remove 'module.' prefix if present
-        new_state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
-
-        # Optionally filter out keys not in model
-        model_keys = set(model.state_dict().keys())
-        filtered_state_dict = {k: v for k, v in new_state_dict.items() if k in model_keys}
-
-        # Load with strict=False to handle minor differences like position_ids
-        model.load_state_dict(filtered_state_dict, strict=False)
-
-        # Wrap with DataParallel if needed
-        if torch.cuda.device_count() > 1:
-            model = nn.DataParallel(model)
-
-        model.to(device)
-        model.eval()
-
-        all_embeddings = []
-
-        print("Extracting embeddings...")
-        with torch.no_grad():
-            for batch in tqdm(dataloader):
-                ids = batch['ids'].to(device)
-                mask = batch['mask'].to(device)
-
-                _, emb = model(ids=ids, mask=mask)
-                all_embeddings.append(emb.detach().cpu().numpy())
-
-        print("Concatenating embeddings...")
-        all_embeddings = np.concatenate(all_embeddings, axis=0)
-
-        print(f"Saving all embeddings to {save_path}")
-        np.save(save_path, all_embeddings)
-    else:
-        print(f"Embeddings already exist at {save_path}, skipping extraction.")
-
-    print("All embeddings saved successfully.")
+        print("All embeddings saved successfully.")
     
     classifier_dataset = ClassifierDataset(config, "test", model_name)
     print(f"Classifier dataset size: {len(classifier_dataset)}")
