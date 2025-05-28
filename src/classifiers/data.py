@@ -189,9 +189,13 @@ class ClassifierDataset(Dataset):
         print(self.has_cache())
         if self.has_cache():
             self.load()
+        elif self.model_name in models_dict:
+            self.header_names = header_names
+            self.process()
+            self.save()
         else:
-            raise NotImplementedError(f"Dataset for {self.mode} is not implemented")
-        
+            raise NotImplementedError(f"Model {self.model_name} is not implemented")
+    
     def __len__(self):
         return len(self.code_feats)
     
