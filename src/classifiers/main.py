@@ -9,6 +9,10 @@ from src.utils.utils import read_config_file
 import pandas as pd
 import numpy as np
 import statistics
+import optuna
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.metrics import (
     precision_score, recall_score, fbeta_score, 
     classification_report, roc_curve, auc, precision_recall_curve
@@ -58,19 +62,63 @@ model_dict = {
     "xgb_chunk": XGBChunkClassifier
 }
 
-extention_dict = {
+extension_dict = {
     "rf": "pkl",
     "xgb": "json",
     "xgb_chunk": "json"
 }
+
+def tune_model_with_optuna(classifier_name: str, X, y, run_config: dict):
+    def rf_objective(trial):
+        params = {
+            "n_estimators": trial.suggest_int("n_estimators", 100, 500),
+            "max_depth": trial.suggest_int("max_depth", 5, 50),
+            "min_samples_split": trial.suggest_int("min_samples_split", 2, 10),
+            "min_samples_leaf": trial.suggest_int("min_samples_leaf", 1, 10),
+            "max_features": trial.suggest_categorical("max_features", ["sqrt", "log2", None]),
+            "bootstrap": trial.suggest_categorical("bootstrap", [True, False])
+        }
+        model = RandomForestClassifier(**params)
+        return cross_val_score(model, X, y, cv=3, scoring='accuracy').mean()
+
+    def xgb_objective(trial):
+        params = {
+            "objective": "binary:logistic",
+            "eval_metric": "logloss",
+            "max_depth": trial.suggest_int("max_depth", 3, 15),
+            "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3),
+            "n_estimators": trial.suggest_int("n_estimators", 100, 500),
+            "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
+            "reg_alpha": trial.suggest_float("reg_alpha", 0, 1),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0, 1)
+        }
+        model = XGBClassifier(**params)
+        return cross_val_score(model, X, y, cv=3, scoring='accuracy').mean()
+
+    study = optuna.create_study(direction="maximize")
+    if classifier_name == "rf":
+        study.optimize(rf_objective, n_trials=run_config.get("tune_trials", 50))
+    elif classifier_name == "xgb":
+        study.optimize(xgb_objective, n_trials=run_config.get("tune_trials", 50))
+    else:
+        raise ValueError(f"Tuning not supported for {classifier_name}")
+
+    return study.best_trial.params
 
 def train_classifier(
         classifier_name: str, train_data: np.ndarray, train_labels: np.ndarray, 
         save_dir: str, run_config: dict = {}, mode: str = "all"
     ):
     assert classifier_name in model_dict, f"Classifier {classifier_name} not found"
+
+     # Check if tuning is requested
+    if run_config.get("tune", False):
+        best_params = tune_model_with_optuna(classifier_name, train_data, train_labels, run_config)
+        model_config = best_params
+    else:
+        model_config = run_config.get("model_config", {})
     
-    model_config = run_config.get("model_config", {})
     train_config = run_config.get("train_config", {})
     
     model = model_dict[classifier_name](model_config)
@@ -79,7 +127,7 @@ def train_classifier(
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    save_path = os.path.join(save_dir, f"{classifier_name}_{mode}.{extention_dict[classifier_name]}")
+    save_path = os.path.join(save_dir, f"{classifier_name}_{mode}.{extension_dict[classifier_name]}")
     model.save(save_path)
     return model
 
@@ -155,8 +203,8 @@ def evaluateByProgram(model, test_split, threshold=0.5, predict_config: dict = {
           f"F1 {f1_mean} ({f1_std})")
 
 def save_predictions(
-        classifier_name: str, test_data: np.ndarray, test_labels: np.ndarray, 
-        model_path: str, save_dir: str, run_config: dict = {}, mode: str = "all"
+        classifier_name: str, test_data: np.ndarray,
+        model_path: str, save_dir: str, run_config: dict = {}, name: str = "all"
     ):
     assert classifier_name in model_dict, f"Classifier {classifier_name} not found"
     
@@ -170,7 +218,7 @@ def save_predictions(
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    np.save(os.path.join(save_dir, f"{classifier_name}_{mode}_predictions.npy"), predictions)
+    np.save(os.path.join(save_dir, f"{classifier_name}_{name}_predictions.npy"), predictions)
 
     return predictions
 
@@ -200,6 +248,9 @@ def main():
         test_split = get_data_by_id(test_data_path, data_features)
         evaluate(model, test_data, test_labels, predict_config=predict_config)
         evaluateByProgram(model, test_split, predict_config=predict_config)
+        save_predictions(classifier_name, test_data, 
+                         os.path.join(save_dir, f"{classifier_name}_{data_features}.{extension_dict[classifier_name]}"), 
+                         save_dir, run_config, data_features)
 
 if __name__ == "__main__":
     main()
