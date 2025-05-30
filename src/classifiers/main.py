@@ -31,8 +31,8 @@ def get_data(pkl_file: str, mode: str):
     with open(pkl_file, 'rb') as f:
         data = pkl.load(f)
     
-    semantic_data = np.vstack(data["code"]) if len(data["code"]) > 0 else np.empty((0, 0))
     structure_data = np.vstack(data["struct"])
+    semantic_data = np.vstack(data["code"]) if len(data["code"]) > 0 else np.empty((structure_data.shape[0], 0))
     all_data = np.hstack([structure_data, semantic_data])
     labels = np.stack(data['target'])
     ids = np.stack(data['program_ids'])
