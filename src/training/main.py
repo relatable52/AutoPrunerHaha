@@ -185,7 +185,7 @@ def main():
         train_dataset= FinetunedDataset(config, "train", model_name)
     test_dataset= FinetunedDataset(config, "test", model_name)
 
-    print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
+    # print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
 
     if mode == "train" and not train_dataset.has_cache():
         train_loader = DataLoader(train_dataset, **TRAIN_PARAMS)
