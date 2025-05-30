@@ -245,8 +245,8 @@ class ClassifierDataset(Dataset):
             pkl.dump({
                 'code': self.code_feats,
                 'struct': self.struct_feats,
-                'labels': self.labels,
-                'static': self.static_ids,
+                'target': self.labels,
+                'static_ids': self.static_ids,
                 'program_ids': self.program_ids
             }, f)
 
