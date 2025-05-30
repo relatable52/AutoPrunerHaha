@@ -181,12 +181,14 @@ def main():
     learned_model_dir = os.path.join(config["CLASSIFIER_MODEL_DIR"], f"{model_name}/")
 
 
-    train_dataset= FinetunedDataset(config, "train", model_name)
+    if mode == "train":
+        train_dataset= FinetunedDataset(config, "train", model_name)
     test_dataset= FinetunedDataset(config, "test", model_name)
 
     print("Dataset have {} train samples and {} test samples".format(len(train_dataset), len(test_dataset)))
 
-    train_loader = DataLoader(train_dataset, **TRAIN_PARAMS)
+    if mode == "train" and not train_dataset.has_cache():
+        train_loader = DataLoader(train_dataset, **TRAIN_PARAMS)
     test_loader = DataLoader(test_dataset, **TEST_PARAMS)
 
     if args.feature == 2:
