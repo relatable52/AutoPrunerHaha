@@ -3,11 +3,11 @@ from torch.utils.data import Dataset
 import os
 import pandas as pd
 from transformers import AutoTokenizer
-from dgl.data.utils import save_info, load_info
 from tqdm import tqdm
 from src.utils.utils import read_config_file
 from src.utils.converter import convert
 import numpy as np
+import pickle
 
 header_names = [
 "-direct#depth_from_main",
@@ -106,17 +106,21 @@ class FinetunedDataset(Dataset):
     def save(self):
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
-        save_info(self.save_path, {'code': self.code_feats,
-                                    'struct': self.struct_feats,
-                                    'target': self.labels,
-                                    'static_ids': self.static_ids,
-                                    'program_ids': self.program_ids,
-                                   }
-                  )
+        with open(self.save_path, "wb") as f:
+            print(f"Saving data to {self.save_path}")
+            pickle.dump({
+                'code': self.code_feats,
+                'struct': self.struct_feats,
+                'target': self.labels,
+                'static_ids': self.static_ids,
+                'program_ids': self.program_ids
+            }, f)
 
     def load(self):
         print("Loading data ...")
-        info_dict = load_info(self.save_path)
+        with open(self.save_path, "rb") as f:
+            info_dict = pickle.load(f)
+            print(f"Data loaded from {self.save_path}")
         self.code_feats = info_dict['code']
         self.struct_feats = info_dict['struct']
         self.labels = info_dict['target']
