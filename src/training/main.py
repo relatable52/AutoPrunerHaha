@@ -218,7 +218,7 @@ def main():
     if mode == "train":
         do_train(8, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "test":
-        model.load_state_dict(torch.load(args.model_path), map_location=torch.device('cpu'))
+        model.load_state_dict(torch.load(args.model_path, map_location=device))
         do_test(test_loader, model, True, save_path=os.path.join(learned_model_dir, f"{args.output_prefix}_{args.feature}_program_predictions.pkl"))
     else:
         raise NotImplemented
