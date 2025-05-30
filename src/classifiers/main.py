@@ -248,7 +248,7 @@ def main():
         model = train_classifier(classifier_name, train_data, train_labels, save_dir, run_config, data_features)
     if mode == "test" or mode == "both":
         if mode == "test":
-            model = model_dict[classifier_name]()
+            model = model_dict[classifier_name](run_config.get("model_config", {}))
 
         model_path = os.path.join(save_dir, f"{classifier_name}_{data_features}.{extension_dict[classifier_name]}")
         model.load(model_path)
