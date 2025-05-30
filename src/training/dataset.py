@@ -130,6 +130,7 @@ class FinetunedDataset(Dataset):
         self.program_ids = info_dict['program_ids']
 
     def has_cache(self):
+        print(self.save_path)
         if os.path.exists(self.save_path):
             print("Data exists")
             return True
