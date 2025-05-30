@@ -25,6 +25,7 @@ def get_args():
     parser.add_argument("--mode", type=str, default="both", help="Mode: train, test or both")
     parser.add_argument("--data_features", type=str, default="all", help="Features to use: semantic, structure or all")
     parser.add_argument("--run_config", required=True, type=str, default="config/run_config.json", help="Path to the model config file")
+    parser.add_argument("--output_prefix", type=str, default="njr1", help="Prefix for output files")
     return parser.parse_args()
 
 def get_data(pkl_file: str, mode: str):
@@ -36,24 +37,26 @@ def get_data(pkl_file: str, mode: str):
     all_data = np.hstack([structure_data, semantic_data])
     labels = np.stack(data['target'])
     ids = np.stack(data['program_ids'])
+    static_ids = np.stack(data['static_ids'])
     if mode == "all":
-        return all_data, labels, ids
+        return all_data, labels, static_ids, ids
     elif mode == "semantic":
-        return semantic_data, labels, ids
+        return semantic_data, labels, static_ids, ids
     elif mode == "structure":
-        return structure_data, labels, ids
+        return structure_data, labels, static_ids, ids
     else:
         raise NotImplemented
 
 def get_data_by_id(pkl_file: str, mode: str):
-    features, labels, ids = get_data(pkl_file, mode)
+    features, labels, static_ids, ids = get_data(pkl_file, mode)
 
     program_ids = np.unique(ids)
-    test_split = {pid: {"features": [], "labels": []} for pid in program_ids}
+    test_split = {pid: {"features": [], "labels": [], "static_ids": []} for pid in program_ids}
 
     for pid, feature, label in zip(ids, features, labels):
         test_split[pid]["features"].append(feature)
         test_split[pid]["labels"].append(label)
+        test_split[pid]["static_ids"].append(static_ids)
     return test_split
 
 model_dict = {
@@ -156,40 +159,44 @@ def evaluate(model, test_data: np.ndarray, test_labels: np.ndarray, predict_conf
     print("f1 score: ", f1_score)
     print("f2 score: ", f2_score)
 
-def evaluateByProgram(model, test_split, threshold=0.5, predict_config: dict = {}):
+def evaluateByProgram(model, test_split, threshold=0.5, predict_config: dict = {}, return_predictions=False):
     precision_avg = []
     recall_avg = []
     f1_avg = []
     
+    predictions_by_program = {}  # To store predictions and labels
+
     for pid in test_split:
-        # Prepare data for this program
+        # Prepare data
         program_features = np.array(test_split[pid]["features"])
         program_labels = np.array(test_split[pid]["labels"])
+        program_static_ids = np.array(test_split[pid]["static_ids"])
     
-        # Predict probabilities for the positive class
+        # Predict probabilities
         output = model.predict(program_features, **predict_config)
         if len(output.shape) == 2:
             output = output[:, 1]
+        
+        # Save outputs for later use
+        predictions_by_program[pid] = {
+            "output": output,
+            "labels": program_labels,
+            "static_mask": program_static_ids
+        }
     
-        # Convert probabilities to binary predictions using threshold 0.5
-        pred = np.where(output >= threshold, 1, 0)
+        # Compute binary prediction using threshold
+        pred = np.where(output >= threshold, 1, 0) * program_static_ids
     
-        # Calculate precision and recall
+        # Metrics
         precision = precision_score(program_labels, pred, zero_division=0)
         recall = recall_score(program_labels, pred, zero_division=0)
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
     
-        # Avoid division by zero in F1 calculation
-        if precision + recall > 0:
-            f1 = 2 * precision * recall / (precision + recall)
-        else:
-            f1 = 0
-    
-        # Append metrics for this program
         precision_avg.append(precision)
         recall_avg.append(recall)
         f1_avg.append(f1)
     
-    # Calculate mean and standard deviation of metrics across programs
+    # Average + stddev
     precision_mean = round(statistics.mean(precision_avg), 2)
     precision_std = round(statistics.stdev(precision_avg), 2) if len(precision_avg) > 1 else 0
     recall_mean = round(statistics.mean(recall_avg), 2)
@@ -197,10 +204,14 @@ def evaluateByProgram(model, test_split, threshold=0.5, predict_config: dict = {
     f1_mean = round(statistics.mean(f1_avg), 2)
     f1_std = round(statistics.stdev(f1_avg), 2) if len(f1_avg) > 1 else 0
     
-    # Log results
-    print(f"[EVAL-AVG] Precision {precision_mean} ({precision_std}), "
+    print(f"[EVAL-AVG] Threshold {threshold} | "
+          f"Precision {precision_mean} ({precision_std}), "
           f"Recall {recall_mean} ({recall_std}), "
           f"F1 {f1_mean} ({f1_std})")
+
+    if return_predictions:
+        return predictions_by_program
+
 
 def save_predictions(
         classifier_name: str, test_data: np.ndarray,
@@ -230,6 +241,7 @@ def main():
     data_features = args.data_features
     run_config = args.run_config
     model_name = config.get("MODEL", None)
+    output_prefix = args.output_prefix
     
     with open(run_config, 'r') as f:
         run_config = json.load(f)
@@ -256,10 +268,12 @@ def main():
         test_data, test_labels, _ = get_data(test_data_path, data_features)
         test_split = get_data_by_id(test_data_path, data_features)
         evaluate(model, test_data, test_labels, predict_config=predict_config)
-        evaluateByProgram(model, test_split, predict_config=predict_config)
-        save_predictions(classifier_name, test_data, 
-                         os.path.join(save_dir, f"{classifier_name}_{data_features}.{extension_dict[classifier_name]}"), 
-                         save_dir, run_config, data_features)
+        predictions = evaluateByProgram(model, test_split, predict_config=predict_config, return_predictions=True)
+        with open(os.path.join(save_dir, f"{output_prefix}_{classifier_name}_{data_features}_predictions.pkl"), 'w') as f:
+            pkl.dump(predictions, f)
+        # save_predictions(classifier_name, test_data, 
+        #                  os.path.join(save_dir, f"{classifier_name}_{data_features}.{extension_dict[classifier_name]}"), 
+        #                  save_dir, run_config, data_features)
 
 if __name__ == "__main__":
     main()
