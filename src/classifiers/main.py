@@ -265,7 +265,7 @@ def main():
         model_path = os.path.join(save_dir, f"{classifier_name}_{data_features}.{extension_dict[classifier_name]}")
         model.load(model_path)
         
-        test_data, test_labels, _ = get_data(test_data_path, data_features)
+        test_data, test_labels, _, _ = get_data(test_data_path, data_features)
         test_split = get_data_by_id(test_data_path, data_features)
         evaluate(model, test_data, test_labels, predict_config=predict_config)
         predictions = evaluateByProgram(model, test_split, predict_config=predict_config, return_predictions=True)
