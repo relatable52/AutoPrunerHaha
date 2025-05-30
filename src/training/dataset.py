@@ -44,7 +44,7 @@ class FinetunedDataset(Dataset):
         self.raw_data_path = self.config["BENCHMARK_CALLGRAPHS"]
         self.processed_path = self.config["PROCESSED_DATA"]
         self.save_dir = os.path.join(self.config["CACHE_DIR"], f"{model_name}/")
-        self.save_path = os.path.join(self.save_dir, f"ft_{self.mode}.pkl")
+        self.save_path = os.path.join(self.save_dir, model_name,  f"ft_{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
         self.emd_dir = os.path.join(self.save_dir, f"{self.mode}_finetuned")
 
