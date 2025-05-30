@@ -53,10 +53,10 @@ def get_data_by_id(pkl_file: str, mode: str):
     program_ids = np.unique(ids)
     test_split = {pid: {"features": [], "labels": [], "static_ids": []} for pid in program_ids}
 
-    for pid, feature, label in zip(ids, features, labels):
+    for pid, feature, label, static_id in zip(ids, features, labels, static_ids):
         test_split[pid]["features"].append(feature)
         test_split[pid]["labels"].append(label)
-        test_split[pid]["static_ids"].append(static_ids)
+        test_split[pid]["static_ids"].append(static_id)
     return test_split
 
 model_dict = {
