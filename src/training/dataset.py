@@ -58,8 +58,10 @@ class FinetunedDataset(Dataset):
         self.header_names = compute_header(header_names, self.config["HEADERS"])
         
         if self.has_cache():
+            print("Cache exists, loading data ...")
             self.load()
         else:
+            print("Cache does not exist, processing data ...")
             self.process()
             self.save()
     def __len__(self):
