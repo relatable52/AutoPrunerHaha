@@ -185,7 +185,7 @@ def evaluateByProgram(model, test_split, threshold=0.5, predict_config: dict = {
         }
     
         # Compute binary prediction using threshold
-        pred = np.where(output >= threshold, 1, 0) * program_static_ids
+        pred = np.where(output >= threshold, 1, 0)
     
         # Metrics
         precision = precision_score(program_labels, pred, zero_division=0)
