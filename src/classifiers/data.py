@@ -224,12 +224,14 @@ class ClassifierDataset(Dataset):
                 filename = line.strip()
                 file_path = os.path.join(self.raw_data_path, filename, self.cg_file)
                 df = pd.read_csv(file_path)
-                features = df[self.header_names].to_numpy()
-                emb = np.load(self.emb_file) if not self.skip_embedding else np.zeros((len(df), 768))  # Assuming 768 is the embedding size
+                features = df[self.header_names].to_numpy()]
+                if not self.skip_embedding:
+                    emb = np.load(self.emb_file)
                 for i in tqdm(range(len(df['dynamic']))):
                     lb, sanity_check = df['dynamic'][i], df[self.config["SA_LABEL"]][i]
                     if self.mode != "train" or sanity_check == 1:
-                        self.code_feats.append(emb[i])
+                        if not self.skip_embedding:
+                            self.code_feats.append(emb[i])
                         self.struct_feats.append(features[i])
                         self.labels.append(lb)
                         self.static_ids.append(sanity_check)
@@ -241,10 +243,10 @@ class ClassifierDataset(Dataset):
 
         with open(self.save_path, 'wb') as f:
             pkl.dump({
-                'code_feats': self.code_feats,
-                'struct_feats': self.struct_feats,
+                'code': self.code_feats,
+                'struct': self.struct_feats,
                 'labels': self.labels,
-                'static_ids': self.static_ids,
+                'static': self.static_ids,
                 'program_ids': self.program_ids
             }, f)
 
