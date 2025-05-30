@@ -16,6 +16,7 @@ import torch
 import math
 # Import statistics Library
 import statistics
+import pickle
 
 warnings.filterwarnings("ignore")
 
@@ -60,72 +61,85 @@ def train(dataloader, model, mean_loss, loss_fn, optimizer, cfx_matrix):
     
     return model, cfx_matrix
 
-def do_test(dataloader, model, is_write=False):
+def do_test(dataloader, model, is_write=False, save_path="program_predictions.pkl"):
     model.eval()
-    cfx_matrix = np.array([[0, 0],
-                           [0, 0]])
+    cfx_matrix = np.array([[0, 0], [0, 0]])
     result_per_programs = {}
-    for i in range(41):
-        result_per_programs[i] = {'lb': [], 'output': []}
-    
+
     all_outputs = []
     all_labels = []
-    loop=tqdm(enumerate(dataloader),leave=False,total=len(dataloader))
+
+    # For saving predictions in pickle format
+    saved_data = {}
+
+    loop = tqdm(enumerate(dataloader), leave=False, total=len(dataloader))
     for idx, batch in loop:
-        code=batch['code'].to(device)
-        struct= batch['struct'].to(device)
-        label=batch['label'].to(device)
+        code = batch['code'].to(device)
+        struct = batch['struct'].to(device)
+        label = batch['label'].to(device)
         sanity_check = batch['static'].numpy()
         program_ids = batch['program_ids'].numpy()
-        output = model(
-                code=code,
-                struct=struct)
-        output = F.softmax(output)
-        output = output.detach().cpu().numpy()[:, 1]
+
+        output = model(code=code, struct=struct)
+        output = F.softmax(output, dim=1).detach().cpu().numpy()[:, 1]  # get positive class proba
         output = output * sanity_check
         pred = np.where(output >= 0.5, 1, 0)
         label = label.detach().cpu().numpy()
-        
+
         for i in range(len(label)):
-            prog_idx, out, lb = program_ids[i], output[i], label[i]
+            prog_idx = program_ids[i]
+            out = output[i]
+            lb = label[i]
+            mask = sanity_check[i]
+
+            if prog_idx not in result_per_programs:
+                result_per_programs[prog_idx] = {'lb': [], 'output': []}
+                saved_data[prog_idx] = {'labels': [], 'output': [], 'static_mask': []}
+
             result_per_programs[prog_idx]['lb'].append(lb)
             result_per_programs[prog_idx]['output'].append(out)
+
+            saved_data[prog_idx]['labels'].append(lb)
+            saved_data[prog_idx]['output'].append(out)
+            saved_data[prog_idx]['static_mask'].append(mask)
+
             all_outputs.append(out)
             all_labels.append(lb)
-        
+
         cfx_matrix, precision, recall, f1 = evaluation_metrics(label, pred, cfx_matrix)
-        loop.set_postfix(pre=precision, rec=recall, f1 = f1)
-    
+        loop.set_postfix(pre=precision, rec=recall, f1=f1)
+
+    # Optionally save all predictions
     if is_write:
-        np.save("prediction.npy", np.array(all_outputs))  
-    
+        np.save("prediction.npy", np.array(all_outputs))
+        with open(save_path, "wb") as f:
+            pickle.dump(saved_data, f)
+        print(f"[SAVED] Predictions saved to {save_path}")
+
     (tn, fp), (fn, tp) = cfx_matrix
-    precision = tp/(tp + fp)
-    recall = tp/(tp + fn)
-    f1 = 2*precision*recall/(precision + recall)
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
     logger.log("[EVAL] Iter {}, Precision {}, Recall {}, F1 {}".format(idx, precision, recall, f1))
-    
+
+    # Average metrics by program
     precision_avg, recall_avg, f1_avg = [], [], []
-    for i in range(41):
+    for i in result_per_programs:
         lb = np.array(result_per_programs[i]['lb'])
         output = np.array(result_per_programs[i]['output'])
         pred = np.where(output >= 0.5, 1, 0)
-        temp = precision_score(lb, pred), recall_score(lb, pred)
-        if math.isnan(temp[0]):
-            temp[0] = 0
-        precision_avg.append(temp[0])
-        recall_avg.append(temp[1])
-        if temp[0] + temp[1] != 0:
-            f1_avg.append(2*temp[0]*temp[1]/(temp[0] + temp[1]))
-        else:
-            f1_avg.append(0)
-    logger.log("[EVAL-AVG] Iter {}, Precision {} ({}), Recall {}({}), F1 {}({})".format(idx, round(statistics.mean(precision_avg), 2),
-                                                                                            round(statistics.stdev(precision_avg), 2), 
-                                                                                            round(statistics.mean(recall_avg), 2),
-                                                                                            round(statistics.stdev(recall_avg), 2),
-                                                                                            round(statistics.mean(f1_avg), 2),
-                                                                                            round(statistics.stdev(f1_avg), 2)))
+        p = precision_score(lb, pred, zero_division=0)
+        r = recall_score(lb, pred, zero_division=0)
+        precision_avg.append(p)
+        recall_avg.append(r)
+        f1_avg.append(2 * p * r / (p + r) if (p + r) > 0 else 0)
 
+    logger.log("[EVAL-AVG] Iter {}, Precision {} ({}), Recall {} ({}), F1 {} ({})".format(
+        idx,
+        round(statistics.mean(precision_avg), 2), round(statistics.stdev(precision_avg), 2),
+        round(statistics.mean(recall_avg), 2), round(statistics.stdev(recall_avg), 2),
+        round(statistics.mean(f1_avg), 2), round(statistics.stdev(f1_avg), 2)
+    ))
 
 
 def do_train(epochs, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir):
@@ -151,7 +165,8 @@ def get_args():
     parser.add_argument("--mode", type=str, default="test") 
     parser.add_argument("--model_path", type=str, default="../replication_package/model/rq1/autopruner/wala.pth", help="Path to checkpoint (for test only)") 
     parser.add_argument("--feature", type=int, default=2, help="0: structure, 1: semantic, 2:combine")     
-    parser.add_argument("--model_name", type=str, default="codet5p-110m-embedding")
+    parser.add_argument("--model_name", type=str, default="codebert")
+    parser.add_argument("--output_prefix", type=str, default="njr1")
     return parser.parse_args()
 
 
@@ -202,7 +217,7 @@ def main():
         do_train(8, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "test":
         model.load_state_dict(torch.load(args.model_path))
-        do_test(test_loader, model, True)
+        do_test(test_loader, model, True, save_path=os.path.join(learned_model_dir, f"{args.output_prefix}_{args.feature}_program_predictions.pkl"))
     else:
         raise NotImplemented
     
