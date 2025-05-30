@@ -269,7 +269,7 @@ def main():
         test_split = get_data_by_id(test_data_path, data_features)
         evaluate(model, test_data, test_labels, predict_config=predict_config)
         predictions = evaluateByProgram(model, test_split, predict_config=predict_config, return_predictions=True)
-        with open(os.path.join(save_dir, f"{output_prefix}_{classifier_name}_{data_features}_predictions.pkl"), 'w') as f:
+        with open(os.path.join(save_dir, f"{output_prefix}_{classifier_name}_{data_features}_predictions.pkl"), 'wb') as f:
             pkl.dump(predictions, f)
         # save_predictions(classifier_name, test_data, 
         #                  os.path.join(save_dir, f"{classifier_name}_{data_features}.{extension_dict[classifier_name]}"), 
