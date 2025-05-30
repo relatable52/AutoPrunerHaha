@@ -55,7 +55,7 @@ class FinetunedDataset(Dataset):
         else:
             return NotImplemented
         
-        self.header_names = compute_header(header_names, self.config["HEADERS"]) if self.config["HEADERS"] else header_names
+        self.header_names = compute_header(header_names, self.config["HEADERS"]) if self.config.get("HEADERS", None) else header_names
         
         if self.has_cache():
             print("Cache exists, loading data ...")
