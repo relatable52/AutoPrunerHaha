@@ -224,7 +224,7 @@ class ClassifierDataset(Dataset):
                 filename = line.strip()
                 file_path = os.path.join(self.raw_data_path, filename, self.cg_file)
                 df = pd.read_csv(file_path)
-                features = df[self.header_names].to_numpy()]
+                features = df[self.header_names].to_numpy()
                 if not self.skip_embedding:
                     emb = np.load(self.emb_file)
                 for i in tqdm(range(len(df['dynamic']))):
