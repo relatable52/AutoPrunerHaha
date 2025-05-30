@@ -218,7 +218,14 @@ def main():
     if mode == "train":
         do_train(8, train_loader, test_loader, model, loss_fn, optimizer, learned_model_dir)
     elif mode == "test":
-        model.load_state_dict(torch.load(args.model_path, map_location=device))
+        state_dict = torch.load(args.model_path, map_location=device)
+
+        # Strip "module." from keys if present
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            new_k = k.replace("module.", "")  # remove "module." prefix
+            new_state_dict[new_k] = v
+        model.load_state_dict(new_state_dict, strict=False)
         do_test(test_loader, model, True, save_path=os.path.join(learned_model_dir, f"{args.output_prefix}_{args.feature}_program_predictions.pkl"))
     else:
         raise NotImplemented
