@@ -1,7 +1,7 @@
 from torch import nn
 import torch
 class NNClassifier_Combine(nn.Module):
-    def __init__(self, hidden_size = 16, emb_dim = 256):
+    def __init__(self, hidden_size = 16, emb_dim = 768):
         super(NNClassifier_Combine, self).__init__()
         self.encoder1 = nn.Linear(emb_dim, hidden_size)
         self.encoder2 = nn.Linear(22, hidden_size)
@@ -16,7 +16,7 @@ class NNClassifier_Combine(nn.Module):
 
 
 class NNClassifier_Semantic(nn.Module):
-    def __init__(self, hidden_size = 16, emb_dim=256):
+    def __init__(self, hidden_size = 16, emb_dim=768):
         super(NNClassifier_Semantic, self).__init__()
         self.encoder1 = nn.Linear(emb_dim, hidden_size)
         self.encoder2 = nn.Linear(22, hidden_size)
@@ -31,7 +31,7 @@ class NNClassifier_Semantic(nn.Module):
         return out
 
 class NNClassifier_Structure(nn.Module):
-    def __init__(self, hidden_size = 16, emb_dim = 256):
+    def __init__(self, hidden_size = 16, emb_dim = 768):
         super(NNClassifier_Structure, self).__init__()
         self.encoder1 = nn.Linear(emb_dim, hidden_size)
         self.encoder2 = nn.Linear(22, hidden_size)
