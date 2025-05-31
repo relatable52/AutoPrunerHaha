@@ -134,8 +134,7 @@ def do_test(dataloader, model, is_write=False, save_path="program_predictions.pk
         recall_avg.append(r)
         f1_avg.append(2 * p * r / (p + r) if (p + r) > 0 else 0)
 
-    logger.log("[EVAL-AVG] Iter {}, Precision {} ({}), Recall {} ({}), F1 {} ({})".format(
-        idx,
+    logger.log("[EVAL-AVG] Precision {} ({}), Recall {} ({}), F1 {} ({})".format(
         round(statistics.mean(precision_avg), 2), round(statistics.stdev(precision_avg), 2),
         round(statistics.mean(recall_avg), 2), round(statistics.stdev(recall_avg), 2),
         round(statistics.mean(f1_avg), 2), round(statistics.stdev(f1_avg), 2)
