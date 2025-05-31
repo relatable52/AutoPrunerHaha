@@ -112,7 +112,6 @@ def do_test(dataloader, model, is_write=False, save_path="program_predictions.pk
     # Optionally save all predictions
     if is_write:
         np.save("prediction.npy", np.array(all_outputs))
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, "wb") as f:
             pickle.dump(saved_data, f)
         print(f"[SAVED] Predictions saved to {save_path}")
@@ -227,6 +226,7 @@ def main():
             new_k = k.replace("module.", "")  # remove "module." prefix
             new_state_dict[new_k] = v
         model.load_state_dict(new_state_dict, strict=False)
+        os.makedirs(learned_model_dir, exist_ok=True)
         do_test(test_loader, model, True, save_path=os.path.join(learned_model_dir, f"{args.output_prefix}_{args.feature}_program_predictions.pkl"))
     else:
         raise NotImplemented
