@@ -120,7 +120,7 @@ def do_test(dataloader, model, is_write=False, save_path="program_predictions.pk
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
-    logger.log("[EVAL] Iter {}, Precision {}, Recall {}, F1 {}".format(idx, precision, recall, f1))
+    logger.log("[EVAL] Precision {}, Recall {}, F1 {}".format(precision, recall, f1))
 
     # Average metrics by program
     precision_avg, recall_avg, f1_avg = [], [], []
