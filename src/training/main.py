@@ -112,6 +112,7 @@ def do_test(dataloader, model, is_write=False, save_path="program_predictions.pk
     # Optionally save all predictions
     if is_write:
         np.save("prediction.npy", np.array(all_outputs))
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, "wb") as f:
             pickle.dump(saved_data, f)
         print(f"[SAVED] Predictions saved to {save_path}")
