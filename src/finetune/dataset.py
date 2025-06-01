@@ -31,7 +31,7 @@ class CallGraphDataset(Dataset):
         self.processed_path = self.config["PROCESSED_DATA"]
         # self.size_mode = size_mode
         self.model_name = model_name
-        self.save_dir = os.path.join(self.config["CACHE_DIR"], f"{self.model_name}/")
+        self.save_dir = os.path.join(self.config["CACHE_DIR"], f"{self.model_name}")
         self.save_path = os.path.join(self.save_dir, f"{self.mode}.pkl")
         self.cg_file = self.config["FULL_FILE"]
 
